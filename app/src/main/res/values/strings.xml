@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ProyectoCitasMedicas</string>
+    <string-array name="roles">
+        <item>Paciente</item>
+        <item>Médico</item>
+    </string-array>
+    <string-array name="generos">
+        <item>Femenino</item>
+        <item>Masculino</item>
+    </string-array>
+</resources>

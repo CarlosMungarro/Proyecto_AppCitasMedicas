@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/medicareLogo"
+        android:adjustViewBounds="true"
+        android:contentDescription="Logo Medicare Connect" />
+
+        <View
+            android:layout_width="2dp"
+            android:layout_height="90dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="#4A90E2" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Crear una cuenta"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#4A90E2" />
+
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/et_nombre_completo"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:hint="Nombre Completo"
+        android:layout_gravity="center"
+        android:background="@drawable/borde_login"
+        />
+    <EditText
+        android:id="@+id/et_correo"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:hint="Correo electrónico"
+        android:layout_gravity="center"
+        android:background="@drawable/borde_login"
+        android:layout_marginTop="10dp"/>
+    <EditText
+        android:id="@+id/et_fecha"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:hint="Fecha de nacimiento"
+        android:layout_gravity="center"
+        android:background="@drawable/borde_login"
+        android:layout_marginTop="10dp"
+        />
+    <EditText
+        android:id="@+id/et_telefono"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:hint="Teléfono"
+        android:layout_gravity="center"
+        android:background="@drawable/borde_login"
+        android:layout_marginTop="10dp"/>
+    <EditText
+        android:id="@+id/et_contra"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:hint="Contraseña"
+        android:layout_gravity="center"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/borde_login"/>
+    <EditText
+        android:id="@+id/conf_contra"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:hint="Confirmar contraseña"
+        android:layout_marginTop="10dp"
+        android:layout_gravity="center"
+        android:background="@drawable/borde_login"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:hint="Rol"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+>
+
+        <AutoCompleteTextView
+            android:id="@+id/etRol"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:hint="Género"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+        <AutoCompleteTextView
+            android:id="@+id/etGenero"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/btn_registrarse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Registrarse"
+        android:layout_marginTop="25dp"
+        android:layout_gravity="center"
+        android:backgroundTint="@color/azul_boton"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="¿Ya tienes una cuenta?"
+        android:textColor="@color/black"
+        android:layout_gravity="center"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Iniciar sesión"
+        android:textColor="@color/azul_login"
+        android:layout_gravity="center"/>
+
+</LinearLayout>
