@@ -15,7 +15,7 @@
         android:id="@+id/ivLogo"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:src="@drawable/medicareLogo"
+        android:src="@drawable/medicare_logo"
         android:adjustViewBounds="true"
         android:contentDescription="Logo Medicare Connect" />
 
