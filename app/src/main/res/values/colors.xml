@@ -4,4 +4,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="azul_login">#749BD7</color>
     <color name="azul_boton">#72B3CA</color>
+    <color name="azulLetrasHeader">#2251AA</color>
+    <color name="btnGuardar">#6BC992</color>
+    <color name="rojoPrincipal">#FF0000</color>
 </resources>

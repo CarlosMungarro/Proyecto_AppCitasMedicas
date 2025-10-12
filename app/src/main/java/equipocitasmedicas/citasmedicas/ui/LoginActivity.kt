@@ -16,35 +16,49 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Usa tu XML de login: renómbralo a activity_login.xml si aún no
         setContentView(R.layout.activity_inicio_sesion)
 
-        val etUsuario = findViewById<EditText>(R.id.et_usuario) // correo
-        val etPass    = findViewById<EditText>(R.id.et_contra)
-        val btnLogin  = findViewById<Button>(R.id.btn_iniciar_sesion)
+        val etUsuario = findViewById<EditText>(R.id.et_usuario)
+        val etPass = findViewById<EditText>(R.id.et_contra)
+        val btnLogin = findViewById<Button>(R.id.btn_iniciar_sesion)
         val tvRegistrate = findViewById<TextView>(R.id.txt_registrarse)
 
-        // Feedback táctil + ver si el click llega
-        tvRegistrate.apply {
-            isClickable = true
-            isFocusable = true
-            setOnClickListener {
-                toast("Ir a registro...")
-                startActivity(Intent(this@LoginActivity, RegistroActivity::class.java))
-            }
+        tvRegistrate.setOnClickListener {
+            toast("Ir a registro...")
+            startActivity(Intent(this@LoginActivity, RegistroActivity::class.java))
         }
 
         btnLogin.setOnClickListener {
             val correo = etUsuario.text.toString().trim()
             val pass = etPass.text.toString()
 
-            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) { toast("Usuario debe ser correo válido."); return@setOnClickListener }
-            if (pass.isEmpty()) { toast("Ingresa tu contraseña."); return@setOnClickListener }
+            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
+                toast("Usuario debe ser correo válido.")
+                return@setOnClickListener
+            }
+            if (pass.isEmpty()) {
+                toast("Ingresa tu contraseña.")
+                return@setOnClickListener
+            }
 
             val paciente = PacienteStore.login(correo, pass)
             if (paciente != null) {
+
+                //Guardar los datos de la sesion
+                val sharedPreferences = getSharedPreferences("app_session", Context.MODE_PRIVATE)
+                with(sharedPreferences.edit()) {
+                    putLong("LOGGED_USER_ID", paciente.id)
+                    putString("LOGGED_USER_ROLE", paciente.rol)
+                    apply()
+                }
+
                 toast("Bienvenido, ${paciente.nombreCompleto}")
-                startActivity(PacientesActivity.intent(this))
+
+                //Navegar a la pantalla de [pantalla]
+                val intent = Intent(this, ConfigurarPerfilActivity::class.java)
+                startActivity(intent)
+
+                // Cierra LoginActivity para que el usuario no pueda volver con el botón de atrás
                 finish()
             } else {
                 toast("Credenciales incorrectas.")
@@ -54,6 +68,8 @@ class LoginActivity : AppCompatActivity() {
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 
+    // El companion object para el intent no es estrictamente necesario aquí,
+    // pero es una buena práctica si otras actividades necesitan iniciar el login.
     companion object {
         fun intent(ctx: Context): Intent = Intent(ctx, LoginActivity::class.java)
     }

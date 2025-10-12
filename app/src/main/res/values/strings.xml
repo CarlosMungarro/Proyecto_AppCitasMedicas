@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">ProyectoCitasMedicas</string>
+    <string name="configuracion_de_perfil">Configuración de perfil</string>
+    <string name="logo_medicare_connect">Logo Medicare Connect</string>
     <string-array name="roles">
         <item>Paciente</item>
         <item>Médico</item>

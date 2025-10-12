@@ -1,13 +1,18 @@
 package equipocitasmedicas.citasmedicas.model
 
-data class Paciente (
+// en model/Paciente.kt
+data class Paciente(
     val id: Long,
-    val nombreCompleto: String,
-    val correo: String,
-    val fechaNacimiento: String,
-    val telefono: String,
-    val password: String,
+    var nombreCompleto: String,
+    var correo: String,
+    var fechaNacimiento: String,
+    var telefono: String,
+    val password: String, // La contraseña no deberia ser editable aqui
     val rol: String,
-    val genero: String)
+    var genero: String,
+    // Campos adicionales para el medico (pueden ser nulos para pacientes)
+    var especialidad: String? = null,
+    var direccionConsultorio: String? = null
+)
 {
 }

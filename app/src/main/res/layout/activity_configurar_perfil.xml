@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:id="@+id/mainContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="24dp">
+
+        <!-- HEADER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/btnAtras"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/btn_atras"
+                android:adjustViewBounds="true" />
+
+            <View
+                android:layout_width="3dp"
+                android:layout_height="90dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:background="@color/azulLetrasHeader" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/configuracion_de_perfil"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/azulLetrasHeader" />
+        </LinearLayout>
+
+        <!-- CONTENIDO -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <ImageView
+                android:id="@+id/imgPerfil"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/background_circulo"
+                android:scaleType="centerCrop" />
+
+            <TextView
+                android:id="@+id/btnEditarFoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Editar foto"
+                android:textColor="@android:color/black"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp" />
+
+            <!-- CAMPOS -->
+            <EditText
+                android:id="@+id/editNombreCompleto"
+                android:layout_width="335dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/borde_configurar"
+                android:hint="Nombre completo"
+                android:inputType="textPersonName"
+                android:padding="10dp"
+                android:textColor="#9D9D9D" />
+
+            <EditText
+                android:id="@+id/editFechaNacimiento"
+                android:layout_width="335dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/borde_configurar"
+                android:hint="Fecha de nacimiento"
+                android:inputType="date"
+                android:padding="10dp"
+                android:textColor="#9D9D9D" />
+
+            <EditText
+                android:id="@+id/editGenero"
+                android:layout_width="335dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/borde_configurar"
+                android:hint="Género"
+                android:inputType="text"
+                android:padding="10dp"
+                android:textColor="#9D9D9D" />
+
+            <EditText
+                android:id="@+id/editTelefono"
+                android:layout_width="335dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/borde_configurar"
+                android:hint="Teléfono"
+                android:inputType="phone"
+                android:padding="10dp"
+                android:textColor="#9D9D9D" />
+
+            <EditText
+                android:id="@+id/editEmail"
+                android:layout_width="335dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/borde_configurar"
+                android:hint="Email"
+                android:enabled="false"
+                android:inputType="textEmailAddress"
+                android:padding="10dp"
+                android:textColor="#9D9D9D" />
+
+            <EditText
+                android:id="@+id/editEspecialidad"
+                android:layout_width="335dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/borde_configurar"
+                android:hint="Especialidad"
+                android:inputType="text"
+                android:visibility="gone"
+                android:padding="10dp"
+                android:textColor="#9D9D9D" />
+
+            <EditText
+                android:id="@+id/editDireccionConsultorio"
+                android:layout_width="335dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/borde_configurar"
+                android:hint="Dirección consultorio"
+                android:inputType="text"
+                android:visibility="gone"
+                android:padding="10dp"
+                android:textColor="#9D9D9D" />
+
+            <!-- BOTÓN GUARDAR -->
+            <Button
+                android:id="@+id/btnGuardar"
+                android:layout_width="136dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="@color/btnGuardar"
+                android:text="Guardar"
+                android:textColor="@android:color/white" />
+
+            <!-- SWITCH DARK MODE + BOTÓN CERRAR SESIÓN -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp">
+
+                <Switch
+                    android:id="@+id/switchDarkMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Modo oscuro"
+                    android:textColor="@android:color/black"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnCerrarSesion"
+                    android:layout_width="136dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:background="@drawable/btn_cerrar_sesion"
+                    android:text="Cerrar sesión"
+                    android:textColor="@color/rojoPrincipal"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

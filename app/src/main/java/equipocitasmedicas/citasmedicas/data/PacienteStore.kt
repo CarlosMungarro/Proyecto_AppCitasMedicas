@@ -22,6 +22,21 @@ object PacienteStore {
     fun login(correo: String, password: String): Paciente? =
         _pacientes.firstOrNull { it.correo.equals(correo, true) && it.password == password }
 
+
+    fun findById(id: Long): Paciente? {
+        return _pacientes.firstOrNull { it.id == id }
+    }
+
+
+    fun update(pacienteActualizado: Paciente): Boolean {
+        val index = _pacientes.indexOfFirst { it.id == pacienteActualizado.id }
+        if (index != -1) {
+            _pacientes[index] = pacienteActualizado
+            return true // Éxito
+        }
+        return false // No se encontró al usuario
+    }
+
     fun count(): Int = _pacientes.size
 
     private fun seed() {
@@ -36,6 +51,8 @@ object PacienteStore {
             rol = "Paciente",
             genero = "Femenino"
         )
+
+
         _pacientes += Paciente(
             id = seq.getAndIncrement(),
             nombreCompleto = "Medico Demo",
@@ -44,7 +61,11 @@ object PacienteStore {
             telefono = "555-222-3333",
             password = "123456",
             rol = "Médico",
-            genero = "Masculino"
+            genero = "Masculino",
+            especialidad = "Cardiologo",
+            direccionConsultorio = "Av kioki 123"
         )
     }
 }
+
+
