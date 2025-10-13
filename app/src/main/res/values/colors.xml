@@ -7,4 +7,7 @@
     <color name="azulLetrasHeader">#2251AA</color>
     <color name="btnGuardar">#6BC992</color>
     <color name="rojoPrincipal">#FF0000</color>
+    <color name="colorPrimary">#4A90E2</color>
+    <color name="colorPrimaryDark">#3A7AC2</color>
+    <color name="colorAccent">#7BA8D6</color>
 </resources>
