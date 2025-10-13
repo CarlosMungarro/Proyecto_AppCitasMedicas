@@ -55,8 +55,9 @@ class LoginActivity : AppCompatActivity() {
                 toast("Bienvenido, ${paciente.nombreCompleto}")
 
                 //Navegar a la pantalla de [pantalla]
-                val intent = Intent(this, ConfigurarPerfilActivity::class.java)
+                val intent = Intent(this, MisCitasPacienteActivity::class.java)
                 startActivity(intent)
+                finish()
 
                 // Cierra LoginActivity para que el usuario no pueda volver con el botón de atrás
                 finish()

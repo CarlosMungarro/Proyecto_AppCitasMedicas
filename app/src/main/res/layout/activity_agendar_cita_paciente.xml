@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scrollAgendarCita"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    android:fillViewport="true"
+    android:padding="16dp"
+    tools:context=".ui.AgendarCitaPacienteActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <!-- HEADER -->
+        <LinearLayout
+            android:id="@+id/headerLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <View
+                android:layout_width="9dp"
+                android:layout_height="90dp"
+                android:layout_marginEnd="16dp"
+                android:background="@color/azulLetrasHeader" />
+
+            <TextView
+                android:id="@+id/textHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/agendar_cita"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/azulLetrasHeader" />
+        </LinearLayout>
+
+        <!-- BUSCADOR MÉDICO -->
+        <EditText
+            android:id="@+id/etBuscarMedico"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Buscar médico por nombre o especialidad"
+            android:background="@drawable/borde_configurar"
+            android:padding="12dp"
+            android:layout_marginTop="16dp"
+            android:inputType="text" />
+
+        <!-- FECHA Y HORA -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:weightSum="2">
+
+            <EditText
+                android:id="@+id/etFecha"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"
+                android:hint="Fecha"
+                android:background="@drawable/borde_configurar"
+                android:padding="12dp"
+                android:focusable="false"
+                android:clickable="true" />
+
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/etHora"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"
+                android:hint="Hora"
+                android:background="@drawable/borde_configurar"
+                android:padding="12dp"
+                android:focusable="false"
+                android:clickable="true" />
+        </LinearLayout>
+
+        <!-- LISTA DE MÉDICOS -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Médicos disponibles"
+            android:textColor="@color/azulLetrasHeader"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:textSize="16sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMedicos"
+            android:layout_width="match_parent"
+            android:layout_height="251dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:scrollbars="vertical" />
+
+        <!-- MOTIVO DE LA CONSULTA -->
+        <EditText
+            android:id="@+id/etMotivo"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:hint="Motivo de la consulta"
+            android:background="@drawable/borde_configurar"
+            android:padding="12dp"
+            android:layout_marginTop="36dp"
+            android:inputType="textMultiLine"
+            android:gravity="top" />
+
+        <!-- BOTONES -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="24dp"
+            android:weightSum="2">
+
+            <Button
+                android:id="@+id/btnCancelarCita"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"
+                android:text="Cancelar"
+                android:backgroundTint="@color/rojoPrincipal"
+                android:textColor="@android:color/white" />
+
+            <Space
+                android:layout_width="16dp"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/btnConfirmarCita"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"
+                android:text="Confirmar"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/azulLetrasHeader"
+                />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
+
+
