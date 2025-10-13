@@ -4,6 +4,7 @@
     <string name="logo_medicare_connect">Logo Medicare Connect</string>
     <string name="mis_citas">Mis citas</string>
     <string name="agendar_cita">Agendar cita</string>
+    <string name="mis_citas_medico">Mis Citas (Médico)</string>
 
 
 
@@ -17,4 +18,5 @@
         <item>Femenino</item>
         <item>Masculino</item>
     </string-array>
+
 </resources>
