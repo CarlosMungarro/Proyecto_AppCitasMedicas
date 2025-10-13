@@ -41,6 +41,8 @@
         android:layout_width="200dp"
         android:layout_height="50dp"
         android:hint="Nombre Completo"
+        android:textSize="15dp"
+        android:padding="12dp"
         android:layout_gravity="center"
         android:background="@drawable/borde_login"
         />
@@ -49,6 +51,8 @@
         android:layout_width="200dp"
         android:layout_height="50dp"
         android:hint="Correo electrónico"
+        android:textSize="15dp"
+        android:padding="12dp"
         android:layout_gravity="center"
         android:background="@drawable/borde_login"
         android:layout_marginTop="10dp"/>
@@ -57,15 +61,20 @@
         android:layout_width="200dp"
         android:layout_height="50dp"
         android:hint="Fecha de nacimiento"
+        android:textSize="15dp"
+        android:padding="12dp"
         android:layout_gravity="center"
         android:background="@drawable/borde_login"
         android:layout_marginTop="10dp"
-        />
+        android:focusable="false"
+        android:clickable="true"/>
     <EditText
         android:id="@+id/et_telefono"
         android:layout_width="200dp"
         android:layout_height="50dp"
         android:hint="Teléfono"
+        android:textSize="15dp"
+        android:padding="12dp"
         android:layout_gravity="center"
         android:background="@drawable/borde_login"
         android:layout_marginTop="10dp"/>
@@ -74,6 +83,8 @@
         android:layout_width="200dp"
         android:layout_height="50dp"
         android:hint="Contraseña"
+        android:textSize="15dp"
+        android:padding="12dp"
         android:layout_gravity="center"
         android:layout_marginTop="10dp"
         android:background="@drawable/borde_login"/>
@@ -81,15 +92,18 @@
         android:id="@+id/conf_contra"
         android:layout_width="200dp"
         android:layout_height="50dp"
+        android:textSize="15dp"
+        android:padding="12dp"
         android:hint="Confirmar contraseña"
         android:layout_marginTop="10dp"
         android:layout_gravity="center"
         android:background="@drawable/borde_login"/>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="100dp"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginTop="10dp"
         android:hint="Rol"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
 >
@@ -98,20 +112,26 @@
             android:id="@+id/etRol"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="15dp"
+            android:padding="12dp"
+
             android:inputType="none"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="100dp"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:hint="Género"
+        android:layout_marginTop="10dp"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
         <AutoCompleteTextView
             android:id="@+id/etGenero"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="15dp"
+            android:padding="12dp"
             android:inputType="none"/>
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -129,6 +149,7 @@
         android:layout_height="wrap_content"
         android:text="¿Ya tienes una cuenta?"
         android:textColor="@color/black"
+        android:layout_marginTop="10dp"
         android:layout_gravity="center"/>
     <TextView
         android:layout_width="wrap_content"

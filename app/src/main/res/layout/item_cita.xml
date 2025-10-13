@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_margin="8dp"
+    android:padding="12dp"
+    android:background="@drawable/background_item"
+    android:gravity="center_vertical"
+    android:clipToPadding="false">
+
+    <!-- Foto de perfil -->
+    <ImageView
+        android:id="@+id/ivPerfil"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/perfil_default"
+        android:scaleType="centerCrop"
+        android:layout_marginEnd="12dp"
+
+        android:contentDescription="Foto del doctor"/>
+
+    <!-- Contenedor de información -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_weight="1">
+
+        <!-- Nombre del doctor -->
+        <TextView
+            android:id="@+id/tvDoctor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dr. Nombre"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="16sp"/>
+
+        <!-- Especialidad -->
+        <TextView
+            android:id="@+id/tvEspecialidad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cardiología"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:layout_marginTop="2dp"/>
+
+        <!-- Fecha y hora -->
+        <TextView
+            android:id="@+id/tvFecha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12/10/2025"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/tvHora"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="15:00"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
+
+</LinearLayout>
+

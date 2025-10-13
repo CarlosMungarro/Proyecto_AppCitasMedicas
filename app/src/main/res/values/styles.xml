@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Estilo personalizado para BottomNavigationView -->
+    <style name="CustomBottomNavigation" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="itemIconSize">36dp</item> <!-- Cambia el tamaño de los íconos -->
+
+    </style>
+
+</resources>
+
