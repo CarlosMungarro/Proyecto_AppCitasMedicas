@@ -1,11 +1,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_width="350dp"
+    android:layout_height="150dp"
+    android:layout_gravity="center"
     android:orientation="horizontal"
+    android:layout_margin="8dp"
     android:padding="12dp"
     android:background="@drawable/background_item"
-    android:layout_marginBottom="8dp"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:clipToPadding="false">
 
     <ImageView
         android:id="@+id/ivDoctor"
