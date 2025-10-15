@@ -67,17 +67,17 @@
         </LinearLayout>
 
         <!-- Datos de la cita -->
-
-        <!-- Info paciente -->
         <TextView
+            android:id="@+id/tvDatosCita"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_marginTop="6dp"
-            android:text="Cita hora: 8:00 AM\nFecha: 14/10/2025"
+            android:text="Cita hora: --:-- / Fecha: --/--/----"
             android:textColor="#444"
             android:textSize="13sp" />
 
+        <!-- Información del paciente -->
         <LinearLayout
             android:orientation="vertical"
             android:background="@drawable/bg_text_white"
@@ -95,27 +95,31 @@
                 android:textColor="#000" />
 
             <TextView
+                android:id="@+id/tvNombre"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nombre: Ana Torres García"
+                android:text="Nombre: --"
                 android:textSize="13sp" />
 
             <TextView
+                android:id="@+id/tvEdad"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Edad: 34 años"
+                android:text="Edad: --"
                 android:textSize="13sp" />
 
             <TextView
+                android:id="@+id/tvGenero"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Género: Femenino"
+                android:text="Género: --"
                 android:textSize="13sp" />
 
             <TextView
+                android:id="@+id/tvTelefono"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Teléfono: +52 (687) 182 9032"
+                android:text="Teléfono: --"
                 android:textSize="13sp" />
         </LinearLayout>
 
@@ -137,14 +141,14 @@
                 android:textColor="#000" />
 
             <TextView
+                android:id="@+id/tvMotivoTexto"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="He estado varios días con dolor de cabeza intenso y fiebre. También tengo tos persistente."
+                android:text="--"
                 android:textSize="13sp"
                 android:layout_marginTop="6dp" />
         </LinearLayout>
 
-        <!-- Subir archivo -->
         <Button
             android:id="@+id/btnAgregarArchivo"
             android:layout_width="wrap_content"
@@ -156,7 +160,6 @@
             android:text="Agregar archivo"
             android:textColor="#000" />
 
-        <!-- Finalizar cita -->
         <Button
             android:id="@+id/btnFinalizar"
             android:layout_width="175dp"

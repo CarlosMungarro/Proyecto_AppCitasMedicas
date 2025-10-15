@@ -8,6 +8,9 @@ data class Cita(
     val nombrePaciente: String,
     val nombreMedico: String,
     val motivo: String,
+    val fechaNacimiento: String,
+    val telefono: String,
+    val genero: String,
     val fechaHora: Date,
     val estado: String,
     val notas: String = ""

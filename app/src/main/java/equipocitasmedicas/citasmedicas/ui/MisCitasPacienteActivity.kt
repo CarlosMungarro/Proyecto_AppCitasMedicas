@@ -51,7 +51,7 @@
             // Navegación inferior
             bottomNav.setOnItemSelectedListener { item ->
                 when (item.itemId) {
-                    R.id.nav_citas -> true
+                    R.id.nav_reloj -> true
                     R.id.nav_perfil -> {
                         startActivity(Intent(this, ConfigurarPerfilActivity::class.java))
                         true

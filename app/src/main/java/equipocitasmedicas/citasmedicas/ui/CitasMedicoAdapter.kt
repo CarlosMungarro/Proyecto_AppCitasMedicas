@@ -7,29 +7,26 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import equipocitasmedicas.citasmedicas.R
-
 import java.text.SimpleDateFormat
 import java.util.*
+
 class CitasMedicoAdapter(
     private var listaCitas: List<Cita>,
     private val onItemClick: (Cita) -> Unit
 ) : RecyclerView.Adapter<CitasMedicoAdapter.CitaViewHolder>() {
 
     inner class CitaViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val layoutIzquierda: View = view.findViewById(R.id.layoutIzquierda)
-        val layoutDerecha: View = view.findViewById(R.id.layoutDerecha)
-        val tvHoraCita: TextView = view.findViewById(R.id.tvHoraCita)
-        val tvEstadoCita: TextView = view.findViewById(R.id.tvEstadoCita)
-        val tvNombrePaciente: TextView = view.findViewById(R.id.tvNombrePaciente)
-        val tvMotivoCita: TextView = view.findViewById(R.id.tvMotivoCita)
+        private val layoutIzquierda: View = view.findViewById(R.id.layoutIzquierda)
+        private val layoutDerecha: View = view.findViewById(R.id.layoutDerecha)
+        private val tvHoraCita: TextView = view.findViewById(R.id.tvHoraCita)
+        private val tvEstadoCita: TextView = view.findViewById(R.id.tvEstadoCita)
+        private val tvNombrePaciente: TextView = view.findViewById(R.id.tvNombrePaciente)
+        private val tvMotivoCita: TextView = view.findViewById(R.id.tvMotivoCita)
 
         fun bind(cita: Cita) {
             val formatoHora = SimpleDateFormat("h:mm a", Locale.getDefault())
             tvHoraCita.text = formatoHora.format(cita.fechaHora)
-
-            // Nombre del paciente
             tvNombrePaciente.text = cita.nombrePaciente
-
             tvMotivoCita.text = cita.motivo
 
             when (cita.estado.lowercase()) {
@@ -59,10 +56,7 @@ class CitasMedicoAdapter(
                 }
             }
 
-            // Click en el item
-            itemView.setOnClickListener {
-                onItemClick(cita)
-            }
+            itemView.setOnClickListener { onItemClick(cita) }
         }
     }
 
