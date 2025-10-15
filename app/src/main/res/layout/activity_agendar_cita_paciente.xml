@@ -10,36 +10,45 @@
     tools:context=".ui.AgendarCitaPacienteActivity">
 
     <LinearLayout
+        android:id="@+id/mainContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
+        android:paddingBottom="24dp">
 
         <!-- HEADER -->
         <LinearLayout
-            android:id="@+id/headerLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="59dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:padding="16dp">
 
+            <ImageView
+                android:id="@+id/btnAtras"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/btn_atras"
+                android:adjustViewBounds="true" />
+
             <View
-                android:layout_width="9dp"
+                android:layout_width="3dp"
                 android:layout_height="90dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:background="@color/azulLetrasHeader" />
 
             <TextView
-                android:id="@+id/textHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/agendar_cita"
+                android:text="Agendar cita"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/azulLetrasHeader" />
         </LinearLayout>
+
+
+
 
         <!-- BUSCADOR MÉDICO -->
         <EditText

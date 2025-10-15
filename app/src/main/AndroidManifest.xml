@@ -32,6 +32,7 @@
             android:exported="false" />
         <activity android:name=".ui.AgendarCitaPacienteActivity"/>
 
+        <activity android:name=".ui.DetallePacienteActivity" android:exported="false" />
 
         <activity
             android:name=".ui.RegistroActivity"

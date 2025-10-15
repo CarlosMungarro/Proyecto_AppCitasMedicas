@@ -51,7 +51,7 @@ class DisponibilidadActivity : AppCompatActivity() {
         horariosViernes = findViewById(R.id.horariosViernes)
 
         etPrecio = findViewById(R.id.etPrecio)
-        btnBack = findViewById(R.id.btnBack)
+        btnBack = findViewById(R.id.btnAtras)
         btnGuardarCambios = findViewById(R.id.btnGuardarCambios)
     }
 

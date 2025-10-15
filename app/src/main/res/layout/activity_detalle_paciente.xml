@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/background"
+    android:padding="20dp"
+    android:gravity="center_horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="59dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/btnAtras"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:adjustViewBounds="true"
+            android:src="@drawable/btn_atras" />
+
+        <View
+            android:layout_width="3dp"
+            android:layout_height="90dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@color/azulLetrasHeader" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Detalle de la cita"
+            android:textColor="@color/azulLetrasHeader"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- Card Doctor -->
+    <LinearLayout
+        android:layout_marginTop="25dp"
+        android:padding="20dp"
+        android:orientation="vertical"
+        android:background="@drawable/background_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/ivPerfilDetalle"
+            android:src="@drawable/perfil_default"
+            android:layout_gravity="center"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:contentDescription="Doctor" />
+
+        <TextView
+            android:id="@+id/tvDoctorDetalle"
+            android:text="Dr. Alfonso Duraz"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:gravity="center"
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/tvEspecialidadDetalle"
+            android:text="Cardiólogo"
+            android:textSize="14sp"
+            android:textColor="@android:color/white"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- Fecha y hora -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:background="@drawable/bg_text_white"
+        android:padding="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Fecha"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tvFechaDetalle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="22 de Febrero, 2025"
+                android:textSize="13sp"
+                android:textColor="#444" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#DDD"/>
+
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Hora"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvHoraDetalle"
+                android:layout_width="152dp"
+                android:layout_height="wrap_content"
+                android:text="10:00 AM"
+                android:textColor="#444"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Motivo -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@drawable/bg_text_white"
+        android:padding="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="Motivo de consulta"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:text="Completada"
+                android:background="@drawable/bg_estado_completado"
+                android:textColor="@android:color/white"
+                android:padding="4dp"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvMotivoDetalle"
+            android:text="Dolor en el pecho y dificultad al respirar"
+            android:textSize="13sp"
+            android:layout_marginTop="8dp"
+            android:textColor="#444"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <!-- Receta médica -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@drawable/bg_text_white"
+        android:padding="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Receta médica"
+            android:textStyle="bold"
+            android:textColor="#000"
+            android:textSize="15sp"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnVerReceta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:backgroundTint="#2962FF"
+            android:text="Ver receta"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/btnCancelarCita"
+            android:layout_width="141dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="#B0BEC5"
+            android:text="Cancelar cita"
+            android:textColor="#000" />
+    </LinearLayout>
+</LinearLayout>
