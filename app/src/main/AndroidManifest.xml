@@ -37,8 +37,14 @@
             android:name=".ui.RegistroActivity"
             android:exported="false" />
         <activity android:name=".ui.MisCitasPacienteActivity" />
-
-
+        <activity
+            android:name=".ui.MisCitasMedicoActivity"
+            android:exported="false"
+            android:label="Mis Citas" />
+        <activity
+            android:name=".ui.DisponibilidadActivity"
+            android:exported="false"
+            android:label="Disponibilidad" />
         <activity
             android:name=".ui.LoginActivity"
             android:exported="true">

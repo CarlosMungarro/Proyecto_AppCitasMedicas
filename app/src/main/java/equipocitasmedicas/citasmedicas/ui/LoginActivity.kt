@@ -44,7 +44,6 @@ class LoginActivity : AppCompatActivity() {
             val paciente = PacienteStore.login(correo, pass)
             if (paciente != null) {
 
-                //Guardar los datos de la sesion
                 val sharedPreferences = getSharedPreferences("app_session", Context.MODE_PRIVATE)
                 with(sharedPreferences.edit()) {
                     putLong("LOGGED_USER_ID", paciente.id)
@@ -54,13 +53,22 @@ class LoginActivity : AppCompatActivity() {
 
                 toast("Bienvenido, ${paciente.nombreCompleto}")
 
-                //Navegar a la pantalla de [pantalla]
-                val intent = Intent(this, MisCitasPacienteActivity::class.java)
-                startActivity(intent)
-                finish()
+                val intent = when (paciente.rol.lowercase()) {
+                    "medico", "médico", "doctor" -> {
+                        Intent(this, MisCitasMedicoActivity::class.java)
+                    }
+                    "paciente" -> {
+                        Intent(this, MisCitasPacienteActivity::class.java)
+                    }
+                    else -> {
+                        toast("Rol no reconocido: ${paciente.rol}")
+                        return@setOnClickListener
+                    }
+                }
 
-                // Cierra LoginActivity para que el usuario no pueda volver con el botón de atrás
-                finish()
+                startActivity(intent)
+                finish() // Cierra LoginActivity
+
             } else {
                 toast("Credenciales incorrectas.")
             }
@@ -69,8 +77,6 @@ class LoginActivity : AppCompatActivity() {
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 
-    // El companion object para el intent no es estrictamente necesario aquí,
-    // pero es una buena práctica si otras actividades necesitan iniciar el login.
     companion object {
         fun intent(ctx: Context): Intent = Intent(ctx, LoginActivity::class.java)
     }

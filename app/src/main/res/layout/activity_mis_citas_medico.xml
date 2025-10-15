@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background"
+    android:background="#E3F2FD"
     tools:context=".ui.MisCitasMedicoActivity">
 
     <LinearLayout
@@ -13,34 +13,77 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginTop="15dp"
-        android:padding="16dp">
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:paddingBottom="8dp">
 
         <View
-            android:layout_width="10dp"
-            android:layout_height="90dp"
-            android:layout_marginStart="46dp"
-            android:layout_marginEnd="16dp"
+            android:layout_width="6dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="12dp"
             android:background="@color/azulLetrasHeader" />
 
         <TextView
             android:id="@+id/textHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/mis_citas_medico"
-            android:textSize="20sp"
+            android:text="Mis citas"
+            android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="@color/azulLetrasHeader" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvFechaActual"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/layoutHeader"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="8dp"
+        android:text="Hoy, sábado 22 de Febrero"
+        android:textSize="14sp"
+        android:textColor="#666666" />
+
+    <LinearLayout
+        android:id="@+id/layoutFiltros"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvFechaActual"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnDia"
+            android:layout_width="80dp"
+            android:layout_height="40dp"
+            android:text="Día"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:backgroundTint="#2196F3"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnSemana"
+            android:layout_width="80dp"
+            android:layout_height="40dp"
+            android:text="Semana"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:backgroundTint="#757575" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCitasMedico"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_below="@id/layoutHeader"
-        android:layout_above="@id/btnAgregarCitaMedico"
+        android:layout_below="@id/layoutFiltros"
+        android:layout_above="@id/bottomNavigationMedico"
         android:layout_marginTop="16dp"
-        android:padding="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
         android:clipToPadding="false" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -49,8 +92,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginBottom="140dp"
-        android:layout_marginEnd="35dp"
+        android:layout_marginBottom="90dp"
+        android:layout_marginEnd="24dp"
         android:src="@drawable/plus"
         app:tint="@android:color/white"
         app:backgroundTint="@color/azul_boton_plus"
@@ -62,8 +105,9 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         app:menu="@menu/menu_bottom_navigation_medico"
-        app:itemIconSize="36dp"
+        app:itemIconSize="32dp"
         app:itemIconTint="@color/azulLetrasHeader"
-        android:background="@color/white" />
+        android:background="@color/white"
+        android:elevation="8dp" />
 
 </RelativeLayout>
