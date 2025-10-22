@@ -3,8 +3,8 @@ import java.util.Date
 
 data class Cita(
     val id: Long,
-    val medicoId: Long,
-    val pacienteId: Long,
+    val medicoId: String,         // UID del médico (FirebaseAuth)
+    val pacienteId: String,
     val nombrePaciente: String,
     val nombreMedico: String,
     val motivo: String,

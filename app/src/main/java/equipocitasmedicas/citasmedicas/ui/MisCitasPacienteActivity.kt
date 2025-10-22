@@ -1,70 +1,95 @@
-    package equipocitasmedicas.citasmedicas.ui
+package equipocitasmedicas.citasmedicas.ui
 
-    import android.content.Intent
-    import android.os.Bundle
-    import androidx.appcompat.app.AppCompatActivity
-    import com.google.android.material.bottomnavigation.BottomNavigationView
-    import com.google.android.material.floatingactionbutton.FloatingActionButton
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import equipocitasmedicas.citasmedicas.R
+import equipocitasmedicas.citasmedicas.model.CitaItem
 
-    import equipocitasmedicas.citasmedicas.data.CitasStore
-    import androidx.recyclerview.widget.LinearLayoutManager
-    import androidx.recyclerview.widget.RecyclerView
-    import equipocitasmedicas.citasmedicas.R
-    import equipocitasmedicas.citasmedicas.model.CitaItem
+class MisCitasPacienteActivity : AppCompatActivity() {
 
+    private lateinit var rvCitas: RecyclerView
+    private lateinit var adapter: CitaAdapter
+    private var pacienteUid: String = ""
 
-    class MisCitasPacienteActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_mis_citas_paciente)
 
-        private lateinit var rvCitas: RecyclerView
-        private lateinit var adapter: CitaAdapter
-        private var pacienteId: Long = -1L
+        val btnAgregar = findViewById<FloatingActionButton>(R.id.btnAgregarCita)
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
 
-        override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
-            setContentView(R.layout.activity_mis_citas_paciente)
+        pacienteUid = getSharedPreferences("app_session", MODE_PRIVATE)
+            .getString("LOGGED_USER_ID", null) ?: ""
 
-            val btnAgregar = findViewById<FloatingActionButton>(R.id.btnAgregarCita)
-            val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-
-            // Obtener paciente logueado
-            pacienteId = getSharedPreferences("app_session", MODE_PRIVATE)
-                .getLong("LOGGED_USER_ID", -1L)
-
-            // RecyclerView
-            rvCitas = findViewById(R.id.rvCitas)
-            rvCitas.layoutManager = LinearLayoutManager(this)
-
-            // Adapter con lista mutable
-            adapter = CitaAdapter(CitasStore.getCitasByPaciente(pacienteId).toMutableList()) { citaSeleccionada ->
-                val intent = Intent(this, DetallePacienteActivity::class.java)
-                intent.putExtra("CITA_ID", citaSeleccionada.id)
-                startActivity(intent)
-            }
-            rvCitas.adapter = adapter
-
-
-            // Botón flotante: agregar cita
-            btnAgregar.setOnClickListener {
-                startActivity(Intent(this, AgendarCitaPacienteActivity::class.java))
-            }
-
-            // Navegación inferior
-            bottomNav.setOnItemSelectedListener { item ->
-                when (item.itemId) {
-                    R.id.nav_reloj -> true
-                    R.id.nav_perfil -> {
-                        startActivity(Intent(this, ConfigurarPerfilActivity::class.java))
-                        true
-                    }
-                    else -> false
-                }
-            }
+        if (pacienteUid.isBlank()) {
+            Toast.makeText(this, "Sesión no encontrada. Inicia sesión.", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
         }
 
-        override fun onResume() {
-            super.onResume()
-            // Refrescar la lista de citas al volver a la actividad
-            val nuevasCitaItems: List<CitaItem> = CitasStore.getCitasByPaciente(pacienteId)
-            adapter.updateCitas(nuevasCitaItems)
+        rvCitas = findViewById(R.id.rvCitas)
+        rvCitas.layoutManager = LinearLayoutManager(this)
+
+        // Si tu adapter usa CitaItem, mapear desde Cita a CitaItem:
+        val lista = CitaStore.obtenerCitasPaciente(pacienteUid).map { cita ->
+            CitaItem(
+                id = cita.id,
+                nombrePaciente = cita.nombrePaciente,
+                nombreMedico = cita.nombreMedico,
+                motivo = cita.motivo,
+                fechaHora = cita.fechaHora,
+                fechaNacimiento = cita.fechaNacimiento,
+                telefono = cita.telefono,
+                genero = cita.genero,
+                estado = cita.estado
+            )
+        }.toMutableList()
+
+        adapter = CitaAdapter(lista) { citaSeleccionada ->
+            startActivity(
+                Intent(this, DetallePacienteActivity::class.java).putExtra("CITA_ID", citaSeleccionada.id)
+            )
+        }
+        rvCitas.adapter = adapter
+
+        btnAgregar.setOnClickListener {
+            startActivity(Intent(this, AgendarCitaPacienteActivity::class.java))
+        }
+
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_reloj -> true
+                R.id.nav_perfil -> {
+                    startActivity(Intent(this, ConfigurarPerfilActivity::class.java))
+                    true
+                }
+                else -> false
+            }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        val nuevas = CitaStore.obtenerCitasPaciente(pacienteUid).map { cita ->
+            CitaItem(
+                id = cita.id,
+                nombrePaciente = cita.nombrePaciente,
+                nombreMedico = cita.nombreMedico,
+                motivo = cita.motivo,
+                fechaHora = cita.fechaHora,
+                fechaNacimiento = cita.fechaNacimiento,
+                telefono = cita.telefono,
+                genero = cita.genero,
+                estado = cita.estado
+            )
+        }
+        adapter.updateCitas(nuevas)
+    }
+}

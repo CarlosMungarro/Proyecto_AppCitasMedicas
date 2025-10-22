@@ -7,8 +7,12 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import equipocitasmedicas.citasmedicas.R
 import equipocitasmedicas.citasmedicas.data.PacienteStore
 import equipocitasmedicas.citasmedicas.model.Paciente
@@ -16,7 +20,10 @@ import java.util.Calendar
 
 class RegistroActivity : AppCompatActivity() {
 
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        auth = Firebase.auth
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registrarse)
 
@@ -29,34 +36,33 @@ class RegistroActivity : AppCompatActivity() {
         val etRol    = findViewById<AutoCompleteTextView>(R.id.etRol)
         val etGenero = findViewById<AutoCompleteTextView>(R.id.etGenero)
         val btnGuardar = findViewById<Button>(R.id.btn_registrarse)
+        val tvGoLogin = findViewById<TextView>(R.id.tv_go_login)
 
-        // Configurar AutoCompleteTextView
-        etRol.setAdapter(
-            ArrayAdapter(this, android.R.layout.simple_list_item_1, resources.getStringArray(R.array.roles))
-        )
-        etGenero.setAdapter(
-            ArrayAdapter(this, android.R.layout.simple_list_item_1, resources.getStringArray(R.array.generos))
-        )
+        intent.getStringExtra("prefill_email")?.let(etCorreo::setText)
 
-        // DatePicker para fecha de nacimiento
+        etRol.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, resources.getStringArray(R.array.roles)))
+        etGenero.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, resources.getStringArray(R.array.generos)))
+
         etFecha.setOnClickListener {
             val calendario = Calendar.getInstance()
-            val dialog = DatePickerDialog(
+            DatePickerDialog(
                 this,
-                { _, year, month, dayOfMonth ->
-                    val fechaSeleccionada = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
-                    etFecha.setText(fechaSeleccionada)
-                },
+                { _, y, m, d -> etFecha.setText(String.format("%04d-%02d-%02d", y, m + 1, d)) },
                 calendario.get(Calendar.YEAR),
                 calendario.get(Calendar.MONTH),
                 calendario.get(Calendar.DAY_OF_MONTH)
-            )
-            // No permitir fechas futuras
-            dialog.datePicker.maxDate = System.currentTimeMillis()
-            dialog.show()
+            ).apply { datePicker.maxDate = System.currentTimeMillis() }.show()
         }
 
-        // Botón registrarse
+        tvGoLogin.setOnClickListener {
+            // Evita que LoginActivity te saque por sesión activa
+            FirebaseAuth.getInstance().signOut()
+            startActivity(LoginActivity.intent(this).apply {
+                putExtra("forceLogin", true) // desactiva auto-redirect en onStart
+            })
+            finish()
+        }
+
         btnGuardar.setOnClickListener {
             val nombre = etNombre.text.toString().trim()
             val correo = etCorreo.text.toString().trim()
@@ -67,52 +73,47 @@ class RegistroActivity : AppCompatActivity() {
             val rol    = etRol.text.toString().trim()
             val genero = etGenero.text.toString().trim()
 
-            // Validaciones
             if (nombre.isEmpty() || correo.isEmpty() || fecha.isEmpty() ||
                 tel.isEmpty() || pass.isEmpty() || pass2.isEmpty() || rol.isEmpty() || genero.isEmpty()
-            ) {
-                toast("Completa todos los campos.")
-                return@setOnClickListener
-            }
+            ) { toast("Completa todos los campos."); return@setOnClickListener }
+            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) { toast("Correo inválido."); return@setOnClickListener }
+            if (pass != pass2) { toast("Las contraseñas no coinciden."); return@setOnClickListener }
+            if (!fecha.matches(Regex("""\d{4}-\d{2}-\d{2}"""))) { toast("Fecha debe ser YYYY-MM-DD."); return@setOnClickListener }
 
-            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-                toast("Correo inválido.")
-                return@setOnClickListener
-            }
+            auth.createUserWithEmailAndPassword(correo, pass)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        val uid = auth.currentUser?.uid
+                        if (uid == null) { toast("No se pudo obtener UID."); return@addOnCompleteListener }
 
-            if (pass != pass2) {
-                toast("Las contraseñas no coinciden.")
-                return@setOnClickListener
-            }
+                        val paciente = Paciente(
+                            id = uid,
+                            nombreCompleto = nombre,
+                            correo = correo,
+                            fechaNacimiento = fecha,
+                            telefono = tel,
+                            rol = rol,
+                            genero = genero
+                        )
 
-            // Validar formato de fecha YYYY-MM-DD
-            if (!fecha.matches(Regex("""\d{4}-\d{2}-\d{2}"""))) {
-                toast("Fecha debe ser YYYY-MM-DD.")
-                return@setOnClickListener
-            }
-
-            // Crear objeto Paciente
-            val paciente = Paciente(
-                id = 0,
-                nombreCompleto = nombre,
-                correo = correo,
-                fechaNacimiento = fecha,
-                telefono = tel,
-                password = pass,
-                rol = rol,
-                genero = genero
-            )
-
-            // Guardar paciente
-            val result = PacienteStore.add(paciente)
-            result.fold(
-                onSuccess = {
-                    toast("Paciente registrado.")
-                    startActivity(LoginActivity.intent(this))
-                    finish()
-                },
-                onFailure = { e -> toast(e.message ?: "Error al registrar.") }
-            )
+                        PacienteStore.add(uid, paciente)
+                            .onSuccess {
+                                toast("Paciente registrado.")
+                                startActivity(LoginActivity.intent(this))
+                                FirebaseAuth.getInstance().signOut() // opcional: fuerza login explícito
+                                startActivity(LoginActivity.intent(this).apply { putExtra("forceLogin", true) })
+                                finish()
+                            }
+                            .onFailure { e ->
+                                toast(e.message ?: "Error al registrar perfil.")
+                            }
+                    } else {
+                        toast(task.exception?.localizedMessage ?: "El registro falló.")
+                    }
+                }
+                .addOnFailureListener {
+                    toast(it.localizedMessage ?: "Error inesperado en registro.")
+                }
         }
     }
 

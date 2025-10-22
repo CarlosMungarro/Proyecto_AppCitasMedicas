@@ -8,28 +8,23 @@ import java.util.*
 object CitaStore {
     private val citas = mutableListOf<Cita>()
 
-    fun obtenerCitasMedicoDia(medicoId: Long, fecha: Date): List<Cita> {
-        val calendario = Calendar.getInstance()
-        calendario.time = fecha
-
+    fun obtenerCitasMedicoDia(medicoUid: String, fecha: Date): List<Cita> {
+        val calendario = Calendar.getInstance().apply { time = fecha }
         val inicioDia = Calendar.getInstance().apply {
             set(calendario.get(Calendar.YEAR), calendario.get(Calendar.MONTH), calendario.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
             set(Calendar.MILLISECOND, 0)
         }
-
         val finDia = Calendar.getInstance().apply {
             set(calendario.get(Calendar.YEAR), calendario.get(Calendar.MONTH), calendario.get(Calendar.DAY_OF_MONTH), 23, 59, 59)
             set(Calendar.MILLISECOND, 999)
         }
-
         return citas.filter {
-            it.medicoId == medicoId && it.fechaHora >= inicioDia.time && it.fechaHora <= finDia.time
+            it.medicoId == medicoUid && it.fechaHora >= inicioDia.time && it.fechaHora <= finDia.time
         }.sortedBy { it.fechaHora }
     }
 
-    fun obtenerCitasMedicoSemana(medicoId: Long, fecha: Date): List<Cita> {
-        val calendario = Calendar.getInstance()
-        calendario.time = fecha
+    fun obtenerCitasMedicoSemana(medicoUid: String, fecha: Date): List<Cita> {
+        val calendario = Calendar.getInstance().apply { time = fecha }
         calendario.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
 
         val inicioSemana = Calendar.getInstance().apply {
@@ -39,7 +34,6 @@ object CitaStore {
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-
         val finSemana = Calendar.getInstance().apply {
             time = inicioSemana.time
             add(Calendar.DAY_OF_YEAR, 6)
@@ -48,9 +42,8 @@ object CitaStore {
             set(Calendar.SECOND, 59)
             set(Calendar.MILLISECOND, 999)
         }
-
         return citas.filter {
-            it.medicoId == medicoId && it.fechaHora >= inicioSemana.time && it.fechaHora <= finSemana.time
+            it.medicoId == medicoUid && it.fechaHora >= inicioSemana.time && it.fechaHora <= finSemana.time
         }.sortedBy { it.fechaHora }
     }
 
@@ -58,11 +51,11 @@ object CitaStore {
         citas.add(cita)
     }
 
-    fun obtenerCitasMedico(medicoId: Long): List<Cita> =
-        citas.filter { it.medicoId == medicoId }.sortedBy { it.fechaHora }
+    fun obtenerCitasMedico(medicoUid: String): List<Cita> =
+        citas.filter { it.medicoId == medicoUid }.sortedBy { it.fechaHora }
 
-    fun obtenerCitasPaciente(pacienteId: Long): List<Cita> =
-        citas.filter { it.pacienteId == pacienteId }.sortedBy { it.fechaHora }
+    fun obtenerCitasPaciente(pacienteUid: String): List<Cita> =
+        citas.filter { it.pacienteId == pacienteUid }.sortedBy { it.fechaHora }
 
     fun actualizarEstadoCita(citaId: Long, nuevoEstado: String): Boolean {
         val index = citas.indexOfFirst { it.id == citaId }
@@ -73,70 +66,46 @@ object CitaStore {
         return false
     }
 
-    // ✅ FUNCIÓN NUEVA: Validar disponibilidad
     fun validarDisponibilidad(
-        medicoId: Long,
+        medicoUid: String,
         diaSemana: Int,
         horaInicio: String,
         horaFin: String
     ): ValidationResult {
         val formato = SimpleDateFormat("HH:mm", Locale.getDefault())
-
         val horaInicioDate = formato.parse(horaInicio)
         val horaFinDate = formato.parse(horaFin)
 
-        // Tomamos solo las citas del médico para ese día
         val citasDia = citas.filter { cita ->
             val cal = Calendar.getInstance().apply { time = cita.fechaHora }
-            cita.medicoId == medicoId && cal.get(Calendar.DAY_OF_WEEK) == diaSemana
+            cita.medicoId == medicoUid && cal.get(Calendar.DAY_OF_WEEK) == diaSemana
         }
 
         val conflictos = citasDia.filter { cita ->
-            val horaCita = formato.format(cita.fechaHora)
-            val horaCitaDate = formato.parse(horaCita)
-
+            val horaCitaDate = formato.parse(formato.format(cita.fechaHora))
             horaCitaDate.after(horaInicioDate) && horaCitaDate.before(horaFinDate)
         }
 
         return if (conflictos.isNotEmpty()) {
-            ValidationResult(
-                isValid = false,
-                mensaje = "Hay citas fuera del rango permitido",
-                citasConflicto = conflictos
-            )
+            ValidationResult(false, "Hay citas fuera del rango permitido", conflictos)
         } else {
-            ValidationResult(
-                isValid = true,
-                mensaje = "Sin conflictos",
-                citasConflicto = emptyList()
-            )
+            ValidationResult(true, "Sin conflictos", emptyList())
         }
     }
 
-    fun agregarDatosPrueba(medicoId: Long) {
+    fun agregarDatosPrueba(medicoUid: String) {
         if (citas.isNotEmpty()) return
 
-        val cita1Hora = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 8)
-            set(Calendar.MINUTE, 0)
-        }
-
-        val cita2Hora = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 9)
-            set(Calendar.MINUTE, 30)
-        }
-
-        val cita3Hora = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 10)
-            set(Calendar.MINUTE, 30)
-        }
+        val cita1Hora = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 8); set(Calendar.MINUTE, 0) }
+        val cita2Hora = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 9); set(Calendar.MINUTE, 30) }
+        val cita3Hora = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 10); set(Calendar.MINUTE, 30) }
 
         citas.addAll(
             listOf(
                 Cita(
                     id = 1L,
-                    medicoId = medicoId,
-                    pacienteId = 101L,
+                    medicoId = medicoUid,
+                    pacienteId = "UID_PACIENTE_101",
                     nombrePaciente = "Andrea Flores",
                     nombreMedico = "Dr. García",
                     motivo = "Primera consulta",
@@ -149,8 +118,8 @@ object CitaStore {
                 ),
                 Cita(
                     id = 2L,
-                    medicoId = medicoId,
-                    pacienteId = 102L,
+                    medicoId = medicoUid,
+                    pacienteId = "UID_PACIENTE_102",
                     nombrePaciente = "Mauro Lainez",
                     nombreMedico = "Dr. García",
                     motivo = "Dolor de estómago",
@@ -163,8 +132,8 @@ object CitaStore {
                 ),
                 Cita(
                     id = 3L,
-                    medicoId = medicoId,
-                    pacienteId = 103L,
+                    medicoId = medicoUid,
+                    pacienteId = "UID_PACIENTE_103",
                     nombrePaciente = "Ian Ortiz",
                     nombreMedico = "Dr. García",
                     motivo = "Rayos X",

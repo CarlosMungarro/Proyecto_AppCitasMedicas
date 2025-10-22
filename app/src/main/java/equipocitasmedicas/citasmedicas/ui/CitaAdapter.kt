@@ -1,3 +1,4 @@
+// app/src/main/java/equipocitasmedicas/citasmedicas/ui/CitaAdapter.kt
 package equipocitasmedicas.citasmedicas.ui
 
 import android.view.LayoutInflater
@@ -8,37 +9,42 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import equipocitasmedicas.citasmedicas.R
 import equipocitasmedicas.citasmedicas.model.CitaItem
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class CitaAdapter(
     private var citas: MutableList<CitaItem>,
     private val onCitaClick: (CitaItem) -> Unit
 ) : RecyclerView.Adapter<CitaAdapter.CitaViewHolder>() {
 
+    // Por qué: un solo formateador reutilizable
+    private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    private val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault())
+
     inner class CitaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ivPerfil: ImageView = itemView.findViewById(R.id.ivPerfil)
-        val tvDoctor: TextView = itemView.findViewById(R.id.tvDoctor)
-        val tvEspecialidad: TextView = itemView.findViewById(R.id.tvEspecialidad)
-        val tvFecha: TextView = itemView.findViewById(R.id.tvFecha)
-        val tvHora: TextView = itemView.findViewById(R.id.tvHora)
+        private val ivPerfil: ImageView = itemView.findViewById(R.id.ivPerfil)
+        private val tvDoctor: TextView = itemView.findViewById(R.id.tvDoctor)
+        private val tvEspecialidad: TextView = itemView.findViewById(R.id.tvEspecialidad)
+        private val tvFecha: TextView = itemView.findViewById(R.id.tvFecha)
+        private val tvHora: TextView = itemView.findViewById(R.id.tvHora)
 
         fun bind(cita: CitaItem) {
-            tvDoctor.text = cita.doctor.nombreCompleto
-            tvEspecialidad.text = cita.doctor.especialidad
-            tvFecha.text = cita.fecha
-            tvHora.text = cita.hora
+            tvDoctor.text = cita.nombreMedico
+            // No tenemos especialidad en CitaItem; mostramos guion o vacio
+            tvEspecialidad.text = "-"
 
-            // Aquí puedes poner una imagen por defecto o según tu modelo
+            tvFecha.text = dateFmt.format(cita.fechaHora)
+            tvHora.text  = timeFmt.format(cita.fechaHora)
+
             ivPerfil.setImageResource(R.drawable.perfil_default)
 
-            itemView.setOnClickListener {
-                onCitaClick(cita)
-            }
+            itemView.setOnClickListener { onCitaClick(cita) }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CitaViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_cita, parent, false) // <- inflamos tu layout correcto
+            .inflate(R.layout.item_cita, parent, false)
         return CitaViewHolder(view)
     }
 

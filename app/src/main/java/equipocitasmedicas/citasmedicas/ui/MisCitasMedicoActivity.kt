@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -16,7 +15,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import equipocitasmedicas.citasmedicas.R
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 class MisCitasMedicoActivity : AppCompatActivity() {
 
@@ -25,7 +25,7 @@ class MisCitasMedicoActivity : AppCompatActivity() {
     private lateinit var tvFechaActual: TextView
     private lateinit var btnDia: Button
     private lateinit var btnSemana: Button
-    private var medicoId: Long = -1
+    private var medicoUid: String = ""
     private var filtroDia: Boolean = true
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -33,17 +33,19 @@ class MisCitasMedicoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mis_citas_medico)
 
-        val sharedPref = getSharedPreferences("app_session", Context.MODE_PRIVATE)
-        medicoId = sharedPref.getLong("LOGGED_USER_ID", -1)
+        val uid = getSharedPreferences("app_session", Context.MODE_PRIVATE)
+            .getString("LOGGED_USER_ID", null)
 
-        if (medicoId == -1L) {
-            Toast.makeText(this, "Error: Usuario no identificado", Toast.LENGTH_SHORT).show()
+        if (uid.isNullOrBlank()) {
+            Toast.makeText(this, "Sesión no encontrada. Inicia sesión.", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
+        medicoUid = uid
 
-        // Datos de prueba
-        CitaStore.agregarDatosPrueba(medicoId)
+        // Seed opcional de prueba vinculado al UID del médico
+        CitaStore.agregarDatosPrueba(medicoUid)
 
         initViews()
         setupRecyclerView()
@@ -63,18 +65,16 @@ class MisCitasMedicoActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         adapter = CitasMedicoAdapter(emptyList()) { cita ->
-            // ✅ Pasamos todos los datos al detalle
             val intent = Intent(this, DetalleMedicoActivity::class.java).apply {
                 putExtra("nombrePaciente", cita.nombrePaciente)
                 putExtra("fechaHora", SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(cita.fechaHora))
                 putExtra("motivo", cita.motivo)
                 putExtra("genero", cita.genero)
                 putExtra("telefono", cita.telefono)
-                putExtra("edad", cita.fechaNacimiento) // o calcula edad si prefieres
+                putExtra("edad", cita.fechaNacimiento)
             }
             startActivity(intent)
         }
-
         rvCitas.layoutManager = LinearLayoutManager(this)
         rvCitas.adapter = adapter
     }
@@ -92,22 +92,13 @@ class MisCitasMedicoActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun setupButtons() {
-        btnDia.setOnClickListener {
-            filtroDia = true
-            actualizarBotones()
-            cargarCitas()
-        }
-
-        btnSemana.setOnClickListener {
-            filtroDia = false
-            actualizarBotones()
-            cargarCitas()
-        }
+        btnDia.setOnClickListener { filtroDia = true; actualizarBotones(); cargarCitas() }
+        btnSemana.setOnClickListener { filtroDia = false; actualizarBotones(); cargarCitas() }
     }
 
     private fun actualizarFecha() {
         val calendario = Calendar.getInstance()
-        val formato = SimpleDateFormat("EEEE dd 'de' MMMM", Locale("es", "ES"))
+        val formato = java.text.SimpleDateFormat("EEEE dd 'de' MMMM", Locale("es", "ES"))
         val fechaTexto = formato.format(calendario.time)
         val fechaCapitalizada = fechaTexto.replaceFirstChar {
             if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
@@ -118,11 +109,10 @@ class MisCitasMedicoActivity : AppCompatActivity() {
     private fun cargarCitas() {
         val calendario = Calendar.getInstance()
         val citas = if (filtroDia) {
-            CitaStore.obtenerCitasMedicoDia(medicoId, calendario.time)
+            CitaStore.obtenerCitasMedicoDia(medicoUid, calendario.time)
         } else {
-            CitaStore.obtenerCitasMedicoSemana(medicoId, calendario.time)
+            CitaStore.obtenerCitasMedicoSemana(medicoUid, calendario.time)
         }
-
         adapter.actualizarCitas(citas)
 
         if (citas.isEmpty()) {
@@ -138,16 +128,8 @@ class MisCitasMedicoActivity : AppCompatActivity() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationMedico)
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_perfil -> {
-                    startActivity(Intent(this, ConfigurarPerfilActivity::class.java))
-                    true
-                }
-
-                R.id.nav_reloj -> {
-                    startActivity(Intent(this, DisponibilidadActivity::class.java))
-                    true
-                }
-
+                R.id.nav_perfil -> { startActivity(Intent(this, ConfigurarPerfilActivity::class.java)); true }
+                R.id.nav_reloj -> { startActivity(Intent(this, DisponibilidadActivity::class.java)); true }
                 else -> false
             }
         }

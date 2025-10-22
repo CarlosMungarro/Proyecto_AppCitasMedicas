@@ -15,6 +15,7 @@ import equipocitasmedicas.citasmedicas.model.DoctorItem
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Calendar
+import android.content.Intent
 
 class AgendarCitaPacienteActivity : AppCompatActivity() {
 
@@ -23,7 +24,6 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
     private var fechaSeleccionada: LocalDate? = null
     private var horaSeleccionada: LocalTime? = null
 
-    // Lista de doctores (fotoUrl opcional)
     private val listaDoctores = listOf(
         DoctorItem("Dr. Juan Pérez", "Cardiología", "Consultorio 101"),
         DoctorItem("Dra. Ana Gómez", "Pediatría", "Consultorio 202"),
@@ -38,14 +38,12 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
         binding = ActivityAgendarCitaPacienteBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // RecyclerView de doctores
         binding.rvMedicos.layoutManager = LinearLayoutManager(this)
         binding.rvMedicos.adapter = DoctorAdapter(listaDoctores) { doctor ->
             doctorSeleccionado = doctor
             Toast.makeText(this, "Doctor seleccionado: ${doctor.nombreCompleto}", Toast.LENGTH_SHORT).show()
         }
 
-        // Picker de fecha
         binding.etFecha.setOnClickListener {
             val hoy = Calendar.getInstance()
             DatePickerDialog(
@@ -74,18 +72,30 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
             ).show()
         }
 
-        // Confirmar cita
         binding.btnConfirmarCita.setOnClickListener {
             val motivo = binding.etMotivo.text.toString()
 
-            if (doctorSeleccionado != null && fechaSeleccionada != null && horaSeleccionada != null) {
-                val pacienteId = getSharedPreferences("app_session", MODE_PRIVATE)
-                    .getLong("LOGGED_USER_ID", -1L)
+            // ✅ Leer UID String (no Long)
+            val pacienteUid = getSharedPreferences("app_session", MODE_PRIVATE)
+                .getString("LOGGED_USER_ID", null)
+
+            if (pacienteUid.isNullOrBlank()) {
+                Toast.makeText(this, "Sesión expirada. Inicia sesión.", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+                return@setOnClickListener
+            }
+
+            val doctor = doctorSeleccionado
+            val fecha = fechaSeleccionada
+            val hora = horaSeleccionada
+
+            if (doctor != null && fecha != null && hora != null && motivo.isNotBlank()) {
                 CitasStore.addCita(
-                    pacienteId,
-                    doctorSeleccionado!!,
-                    fechaSeleccionada.toString(),
-                    horaSeleccionada.toString(),
+                    pacienteUid,                // ← String
+                    doctor,
+                    fecha.toString(),           // "YYYY-MM-DD"
+                    hora.toString(),            // "HH:mm"
                     motivo
                 )
                 Toast.makeText(this, "Cita agendada", Toast.LENGTH_SHORT).show()
@@ -95,9 +105,6 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
             }
         }
 
-        // Cancelar cita
-        binding.btnCancelarCita.setOnClickListener {
-            finish()
-        }
+        binding.btnCancelarCita.setOnClickListener { finish() }
     }
 }

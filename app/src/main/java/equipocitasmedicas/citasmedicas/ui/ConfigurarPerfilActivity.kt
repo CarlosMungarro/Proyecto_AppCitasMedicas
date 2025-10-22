@@ -8,46 +8,46 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 import equipocitasmedicas.citasmedicas.data.PacienteStore
 import equipocitasmedicas.citasmedicas.databinding.ActivityConfigurarPerfilBinding // Asegúrate que el nombre coincida
 import equipocitasmedicas.citasmedicas.model.Paciente
 
 class ConfigurarPerfilActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityConfigurarPerfilBinding
     private var currentUser: Paciente? = null
 
-    // ✅ ÚNICO LAUNCHER NECESARIO: para seleccionar una imagen de la galería
-    private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        // Si el usuario selecciona una imagen (uri no es nulo), la mostramos y guardamos
-        uri?.let {
-            binding.imgPerfil.setImageURI(it)
-            saveProfileImageUri(it)
+    private val selectImageLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                binding.imgPerfil.setImageURI(it)
+                saveProfileImageUri(it)
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityConfigurarPerfilBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val sharedPreferences = getSharedPreferences("app_session", Context.MODE_PRIVATE)
-        val userId = sharedPreferences.getLong("LOGGED_USER_ID", -1L)
+        val sp = getSharedPreferences("app_session", Context.MODE_PRIVATE)
+        // ⚠️ AHORA ES STRING (UID), NO LONG
+        val userUid: String? = sp.getString("LOGGED_USER_ID", null)
 
-        if (userId == -1L) {
+        if (userUid.isNullOrBlank()) {
             toast("Error: Sesión no encontrada.")
             finish()
             return
         }
 
-        currentUser = PacienteStore.findById(userId)
+        // ✅ Usa findByUid(uid) en lugar de findById(id: Long)
+        currentUser = PacienteStore.findByUid(userUid)
         if (currentUser == null) {
             toast("Error: No se pudieron cargar los datos del usuario.")
             finish()
             return
         }
 
-        // Configura la UI
         setupUIForRole(currentUser!!.rol)
         populateUserData(currentUser!!)
         loadProfileImage()
@@ -55,47 +55,33 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        binding.btnAtras.setOnClickListener {
-            finish()
-        }
-
-        binding.btnGuardar.setOnClickListener {
-            saveUserData()
-        }
-
-        // ✅ LÓGICA SIMPLIFICADA: Al hacer clic, se lanza directamente el selector de imágenes.
-        binding.btnEditarFoto.setOnClickListener {
-            selectImageLauncher.launch("image/*")
-        }
-
-        binding.btnCerrarSesion.setOnClickListener {
-            logout()
-        }
+        binding.btnAtras.setOnClickListener { finish() }
+        binding.btnGuardar.setOnClickListener { saveUserData() }
+        binding.btnEditarFoto.setOnClickListener { selectImageLauncher.launch("image/*") }
+        binding.btnCerrarSesion.setOnClickListener { logout() }
     }
 
     private fun saveProfileImageUri(uri: Uri) {
-        val sharedPreferences = getSharedPreferences("app_session", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putString("PROFILE_IMAGE_URI_${currentUser?.id}", uri.toString()).apply()
+        val sp = getSharedPreferences("app_session", Context.MODE_PRIVATE)
+        sp.edit().putString("PROFILE_IMAGE_URI_${currentUser?.id}", uri.toString()).apply()
     }
 
     private fun loadProfileImage() {
-        val sharedPreferences = getSharedPreferences("app_session", Context.MODE_PRIVATE)
-        val uriString = sharedPreferences.getString("PROFILE_IMAGE_URI_${currentUser?.id}", null)
-        uriString?.let {
-            binding.imgPerfil.setImageURI(Uri.parse(it))
-        }
+        val sp = getSharedPreferences("app_session", Context.MODE_PRIVATE)
+        val uriString = sp.getString("PROFILE_IMAGE_URI_${currentUser?.id}", null)
+        uriString?.let { binding.imgPerfil.setImageURI(Uri.parse(it)) }
     }
 
     private fun logout() {
-        val sharedPreferences = getSharedPreferences("app_session", Context.MODE_PRIVATE)
-        sharedPreferences.edit().clear().apply()
+        // Importante: cerrar sesión real de Firebase
+        FirebaseAuth.getInstance().signOut()
+        val sp = getSharedPreferences("app_session", Context.MODE_PRIVATE)
+        sp.edit().clear().apply()
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
-
-    // --- (El resto de tus funciones: saveUserData, populateUserData, etc., se mantienen igual) ---
 
     private fun saveUserData() {
         currentUser?.let { user ->
@@ -138,7 +124,6 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
         }
     }
 
-    private fun toast(message: String) {
+    private fun toast(message: String) =
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
 }
