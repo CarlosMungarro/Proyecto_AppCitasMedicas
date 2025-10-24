@@ -8,13 +8,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import equipocitasmedicas.citasmedicas.R
-import equipocitasmedicas.citasmedicas.model.CitaItem
+import equipocitasmedicas.citasmedicas.model.Cita
 
 class MisCitasPacienteActivity : AppCompatActivity() {
 
     private lateinit var rvCitas: RecyclerView
     private lateinit var adapter: CitaAdapter
+    private val db = FirebaseFirestore.getInstance()
     private var pacienteUid: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,37 +27,23 @@ class MisCitasPacienteActivity : AppCompatActivity() {
         val btnAgregar = findViewById<FloatingActionButton>(R.id.btnAgregarCita)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
 
-        pacienteUid = getSharedPreferences("app_session", MODE_PRIVATE)
-            .getString("LOGGED_USER_ID", null) ?: ""
-
-        if (pacienteUid.isBlank()) {
-            Toast.makeText(this, "Sesión no encontrada. Inicia sesión.", Toast.LENGTH_SHORT).show()
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            Toast.makeText(this, "Debes iniciar sesión para ver tus citas", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
 
+        pacienteUid = user.uid
+
         rvCitas = findViewById(R.id.rvCitas)
         rvCitas.layoutManager = LinearLayoutManager(this)
 
-        // Si tu adapter usa CitaItem, mapear desde Cita a CitaItem:
-        val lista = CitaStore.obtenerCitasPaciente(pacienteUid).map { cita ->
-            CitaItem(
-                id = cita.id,
-                nombrePaciente = cita.nombrePaciente,
-                nombreMedico = cita.nombreMedico,
-                motivo = cita.motivo,
-                fechaHora = cita.fechaHora,
-                fechaNacimiento = cita.fechaNacimiento,
-                telefono = cita.telefono,
-                genero = cita.genero,
-                estado = cita.estado
-            )
-        }.toMutableList()
-
-        adapter = CitaAdapter(lista) { citaSeleccionada ->
+        adapter = CitaAdapter(mutableListOf()) { citaSeleccionada ->
             startActivity(
-                Intent(this, DetallePacienteActivity::class.java).putExtra("CITA_ID", citaSeleccionada.id)
+                Intent(this, DetallePacienteActivity::class.java)
+                    .putExtra("CITA_ID", citaSeleccionada.pacienteId)
             )
         }
         rvCitas.adapter = adapter
@@ -73,23 +62,27 @@ class MisCitasPacienteActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
+        cargarCitas()
+    }
+
+    private fun cargarCitas() {
+        db.collection("citas")
+            .whereEqualTo("pacienteId", pacienteUid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val citas = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Cita::class.java)
+                }
+                adapter.updateCitas(citas)
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error al cargar citas: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     override fun onResume() {
         super.onResume()
-        val nuevas = CitaStore.obtenerCitasPaciente(pacienteUid).map { cita ->
-            CitaItem(
-                id = cita.id,
-                nombrePaciente = cita.nombrePaciente,
-                nombreMedico = cita.nombreMedico,
-                motivo = cita.motivo,
-                fechaHora = cita.fechaHora,
-                fechaNacimiento = cita.fechaNacimiento,
-                telefono = cita.telefono,
-                genero = cita.genero,
-                estado = cita.estado
-            )
-        }
-        adapter.updateCitas(nuevas)
+        cargarCitas()
     }
 }

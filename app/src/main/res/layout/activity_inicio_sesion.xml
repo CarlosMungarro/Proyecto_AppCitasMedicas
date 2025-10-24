@@ -15,14 +15,14 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Usuario"
+        android:text="Correo"
         android:textColor="@color/azul_login"
         android:layout_gravity="center"/>
     <EditText
         android:id="@+id/et_usuario"
         android:layout_width="150dp"
         android:layout_height="50dp"
-        android:hint=" Usuario"
+        android:hint=" Correo"
         android:textSize="15dp"
         android:padding="12dp"
         android:layout_gravity="center"
@@ -47,12 +47,16 @@
         android:background="@drawable/borde_login"/>
 
     <TextView
+        android:id="@+id/tv_olvidaste_contra"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="¿Olvidaste tu contraseña?"
         android:textColor="@color/azul_login"
         android:layout_marginTop="12dp"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"/>
 
     <Button
         android:id="@+id/btn_iniciar_sesion"

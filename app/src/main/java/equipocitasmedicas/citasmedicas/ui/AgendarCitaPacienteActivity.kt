@@ -2,109 +2,159 @@ package equipocitasmedicas.citasmedicas.ui
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import equipocitasmedicas.citasmedicas.R
-import equipocitasmedicas.citasmedicas.data.CitasStore
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import equipocitasmedicas.citasmedicas.databinding.ActivityAgendarCitaPacienteBinding
-import equipocitasmedicas.citasmedicas.model.DoctorItem
-import java.time.LocalDate
-import java.time.LocalTime
-import java.util.Calendar
-import android.content.Intent
+import equipocitasmedicas.citasmedicas.model.Cita
+import equipocitasmedicas.citasmedicas.model.MedicoPaciente
+import java.util.*
 
 class AgendarCitaPacienteActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAgendarCitaPacienteBinding
-    private var doctorSeleccionado: DoctorItem? = null
-    private var fechaSeleccionada: LocalDate? = null
-    private var horaSeleccionada: LocalTime? = null
+    private val db = FirebaseFirestore.getInstance()
+    private val doctorsList = mutableListOf<MedicoPaciente>()
+    private val filteredDoctors = mutableListOf<MedicoPaciente>()
+    private lateinit var adapter: DoctorAdapter
 
-    private val listaDoctores = listOf(
-        DoctorItem("Dr. Juan Pérez", "Cardiología", "Consultorio 101"),
-        DoctorItem("Dra. Ana Gómez", "Pediatría", "Consultorio 202"),
-        DoctorItem("Dr. Luis Martínez", "Dermatología", "Consultorio 303"),
-        DoctorItem("Dra. Carmen Rodríguez", "Ginecología", "Consultorio 404"),
-        DoctorItem("Dr. Andrés López", "Odontología", "Consultorio 505")
-    )
+    private var selectedDoctor: MedicoPaciente? = null
+    private var selectedDate: Calendar? = null
+    private var selectedTime: Calendar? = null
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAgendarCitaPacienteBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        adapter = DoctorAdapter(filteredDoctors) { doctor ->
+            selectedDoctor = doctor
+            Toast.makeText(this, "Seleccionaste a: ${doctor.nombreCompleto}", Toast.LENGTH_SHORT).show()
+        }
+
         binding.rvMedicos.layoutManager = LinearLayoutManager(this)
-        binding.rvMedicos.adapter = DoctorAdapter(listaDoctores) { doctor ->
-            doctorSeleccionado = doctor
-            Toast.makeText(this, "Doctor seleccionado: ${doctor.nombreCompleto}", Toast.LENGTH_SHORT).show()
-        }
+        binding.rvMedicos.adapter = adapter
 
+        loadDoctors()
+        setupSearch()
+        setupDatePicker()
+        setupTimePicker()
+        setupButtons()
+    }
+
+    private fun loadDoctors() {
+        db.collection("medicos").get()
+            .addOnSuccessListener { snapshot ->
+                doctorsList.clear()
+                for (doc in snapshot.documents) {
+                    val id = doc.id
+                    val nombre = doc.getString("nombreCompleto") ?: ""
+                    val especialidad = doc.getString("especialidad") ?: ""
+                    val consultorio = doc.getString("direccionConsultorio") ?: ""
+                    val foto = doc.getString("fotoUrl")
+                    doctorsList.add(MedicoPaciente(id, nombre, especialidad, consultorio, foto))
+                }
+                filteredDoctors.clear()
+                filteredDoctors.addAll(doctorsList)
+                adapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Error al cargar médicos", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun setupSearch() {
+        binding.etBuscarMedico.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s.toString().lowercase(Locale.getDefault())
+                filteredDoctors.clear()
+                filteredDoctors.addAll(doctorsList.filter {
+                    it.nombreCompleto.lowercase(Locale.getDefault()).contains(query) ||
+                            it.especialidad.lowercase(Locale.getDefault()).contains(query)
+                })
+                adapter.notifyDataSetChanged()
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    private fun setupDatePicker() {
         binding.etFecha.setOnClickListener {
-            val hoy = Calendar.getInstance()
-            DatePickerDialog(
-                this,
-                { _, year, month, dayOfMonth ->
-                    binding.etFecha.setText("$dayOfMonth/${month + 1}/$year")
-                    fechaSeleccionada = LocalDate.of(year, month + 1, dayOfMonth)
-                },
-                hoy.get(Calendar.YEAR),
-                hoy.get(Calendar.MONTH),
-                hoy.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            val now = Calendar.getInstance()
+            DatePickerDialog(this, { _, year, month, dayOfMonth ->
+                val cal = Calendar.getInstance()
+                cal.set(year, month, dayOfMonth)
+                selectedDate = cal
+                binding.etFecha.setText("${dayOfMonth}/${month + 1}/$year")
+            }, now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH)).show()
         }
+    }
 
+    private fun setupTimePicker() {
         binding.etHora.setOnClickListener {
-            val ahora = Calendar.getInstance()
-            TimePickerDialog(
-                this,
-                { _, hour, minute ->
-                    binding.etHora.setText(String.format("%02d:%02d", hour, minute))
-                    horaSeleccionada = LocalTime.of(hour, minute)
-                },
-                ahora.get(Calendar.HOUR_OF_DAY),
-                ahora.get(Calendar.MINUTE),
-                true
-            ).show()
+            val now = Calendar.getInstance()
+            TimePickerDialog(this, { _, hourOfDay, minute ->
+                val cal = selectedDate ?: Calendar.getInstance()
+                cal.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                cal.set(Calendar.MINUTE, minute)
+                selectedTime = cal
+                binding.etHora.setText(String.format("%02d:%02d", hourOfDay, minute))
+            }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), true).show()
         }
+    }
+
+    private fun setupButtons() {
+        binding.btnCancelarCita.setOnClickListener { finish() }
 
         binding.btnConfirmarCita.setOnClickListener {
-            val motivo = binding.etMotivo.text.toString()
-
-            // ✅ Leer UID String (no Long)
-            val pacienteUid = getSharedPreferences("app_session", MODE_PRIVATE)
-                .getString("LOGGED_USER_ID", null)
-
-            if (pacienteUid.isNullOrBlank()) {
-                Toast.makeText(this, "Sesión expirada. Inicia sesión.", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user == null) {
+                Toast.makeText(this, "Debes iniciar sesión para agendar una cita", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val doctor = doctorSeleccionado
-            val fecha = fechaSeleccionada
-            val hora = horaSeleccionada
-
-            if (doctor != null && fecha != null && hora != null && motivo.isNotBlank()) {
-                CitasStore.addCita(
-                    pacienteUid,                // ← String
-                    doctor,
-                    fecha.toString(),           // "YYYY-MM-DD"
-                    hora.toString(),            // "HH:mm"
-                    motivo
-                )
-                Toast.makeText(this, "Cita agendada", Toast.LENGTH_SHORT).show()
-                finish()
-            } else {
-                Toast.makeText(this, "Completa todos los campos y selecciona un doctor", Toast.LENGTH_SHORT).show()
+            if (selectedDoctor == null || selectedDate == null || selectedTime == null) {
+                Toast.makeText(this, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
-        }
 
-        binding.btnCancelarCita.setOnClickListener { finish() }
+            val motivo = binding.etMotivo.text.toString().trim()
+            if (motivo.isEmpty()) {
+                Toast.makeText(this, "Por favor ingresa el motivo de la cita", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val citaCalendar = selectedTime ?: selectedDate!!
+            val pacienteId = user.uid
+            val pacienteNombre = user.displayName ?: user.email ?: "Paciente sin nombre"
+
+            val cita = Cita(
+                pacienteId = pacienteId,
+                pacienteNombre = pacienteNombre,
+                medicoId = selectedDoctor!!.id,
+                medicoNombre = selectedDoctor!!.nombreCompleto,
+                medicoEspecialidad = selectedDoctor!!.especialidad,
+                fechaHora = Timestamp(citaCalendar.time),
+                estado = "pendiente",
+                notas = motivo
+            )
+
+            db.collection("citas").add(cita)
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Cita agendada correctamente", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Error al agendar cita: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
     }
 }

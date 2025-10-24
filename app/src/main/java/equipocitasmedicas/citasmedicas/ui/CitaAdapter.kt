@@ -8,16 +8,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import equipocitasmedicas.citasmedicas.R
-import equipocitasmedicas.citasmedicas.model.CitaItem
+import equipocitasmedicas.citasmedicas.model.Cita
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class CitaAdapter(
-    private var citas: MutableList<CitaItem>,
-    private val onCitaClick: (CitaItem) -> Unit
+    private var citas: MutableList<Cita>,
+    private val onCitaClick: (Cita) -> Unit
 ) : RecyclerView.Adapter<CitaAdapter.CitaViewHolder>() {
 
-    // Por qué: un solo formateador reutilizable
     private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     private val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault())
 
@@ -28,16 +27,19 @@ class CitaAdapter(
         private val tvFecha: TextView = itemView.findViewById(R.id.tvFecha)
         private val tvHora: TextView = itemView.findViewById(R.id.tvHora)
 
-        fun bind(cita: CitaItem) {
-            tvDoctor.text = cita.nombreMedico
-            // No tenemos especialidad en CitaItem; mostramos guion o vacio
-            tvEspecialidad.text = "-"
+        fun bind(cita: Cita) {
+            tvDoctor.text = cita.medicoNombre
+            tvEspecialidad.text = if (cita.medicoEspecialidad.isNotBlank()) cita.medicoEspecialidad else "-"
 
-            tvFecha.text = dateFmt.format(cita.fechaHora)
-            tvHora.text  = timeFmt.format(cita.fechaHora)
+            cita.fechaHora?.toDate()?.let { date ->
+                tvFecha.text = dateFmt.format(date)
+                tvHora.text = timeFmt.format(date)
+            } ?: run {
+                tvFecha.text = "-"
+                tvHora.text = "-"
+            }
 
             ivPerfil.setImageResource(R.drawable.perfil_default)
-
             itemView.setOnClickListener { onCitaClick(cita) }
         }
     }
@@ -54,7 +56,7 @@ class CitaAdapter(
         holder.bind(citas[position])
     }
 
-    fun updateCitas(nuevasCitas: List<CitaItem>) {
+    fun updateCitas(nuevasCitas: List<Cita>) {
         citas.clear()
         citas.addAll(nuevasCitas)
         notifyDataSetChanged()

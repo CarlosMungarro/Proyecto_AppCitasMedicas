@@ -12,4 +12,5 @@
     <color name="colorPrimaryDark">#3A7AC2</color>
     <color name="colorAccent">#7BA8D6</color>
     <color name="btnCancelar">#6D6D6D</color>
+    <color name="btnContraseñar">#FFC107</color>
 </resources>

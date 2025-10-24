@@ -54,11 +54,13 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.15.1")
     kapt("com.github.bumptech.glide:compiler:4.15.1")
 
-    // Añadido para firebase
-    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
-    implementation("com.google.firebase:firebase-auth")
+    // Firebase Authentication
+    implementation("com.google.firebase:firebase-auth-ktx:22.3.0")
+    // Firebase Firestore
+    implementation("com.google.firebase:firebase-firestore-ktx:24.7.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
+

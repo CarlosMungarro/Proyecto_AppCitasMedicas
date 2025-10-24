@@ -152,6 +152,15 @@
                 android:textColor="@color/black"
                 android:visibility="gone" />
 
+            <Button
+                android:id="@+id/btnCambiarContrasena"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Cambiar contraseña"
+                android:backgroundTint="@color/btnContraseñar"
+                android:textColor="@android:color/white" />
+
             <!-- BOTÓN GUARDAR -->
             <Button
                 android:id="@+id/btnGuardar"

@@ -1,6 +1,7 @@
 
 package equipocitasmedicas.citasmedicas.ui
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -10,13 +11,8 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import equipocitasmedicas.citasmedicas.R
-import equipocitasmedicas.citasmedicas.data.PacienteStore
-import equipocitasmedicas.citasmedicas.model.Paciente
-import java.text.Normalizer
 
 class LoginActivity : AppCompatActivity() {
 
@@ -26,109 +22,114 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_inicio_sesion)
 
-        auth = Firebase.auth
+        auth = FirebaseAuth.getInstance()
 
         val etUsuario = findViewById<EditText>(R.id.et_usuario)
         val etPass = findViewById<EditText>(R.id.et_contra)
         val btnLogin = findViewById<Button>(R.id.btn_iniciar_sesion)
         val tvRegistrate = findViewById<TextView>(R.id.txt_registrarse)
+        val tvOlvidasteContra = findViewById<TextView>(R.id.tv_olvidaste_contra)
 
+        //Registro
         tvRegistrate.setOnClickListener {
             startActivity(Intent(this@LoginActivity, RegistroActivity::class.java))
         }
 
+        //Iniciar sesión
         btnLogin.setOnClickListener {
             val correo = etUsuario.text.toString().trim()
             val pass = etPass.text.toString()
 
-            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) { toast("Usuario debe ser correo válido."); return@setOnClickListener }
-            if (pass.isEmpty()) { toast("Ingresa tu contraseña."); return@setOnClickListener }
+            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
+                toast("El correo ingresado no es válido.")
+                return@setOnClickListener
+            }
+            if (pass.isEmpty()) {
+                toast("Ingresa tu contraseña.")
+                return@setOnClickListener
+            }
 
             auth.signInWithEmailAndPassword(correo, pass)
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
-                        val uid = auth.currentUser?.uid ?: run {
-                            toast("No se pudo obtener el usuario."); return@addOnCompleteListener
+                        val currentUser = auth.currentUser
+                        if (currentUser != null) {
+                            saveSession(currentUser.uid, currentUser.email ?: correo)
+                            toast("Bienvenido, ${currentUser.email}")
+                            startActivity(Intent(this, MisCitasPacienteActivity::class.java))
+                            finish()
+                        } else {
+                            toast("No se pudo obtener el usuario.")
                         }
-                        val perfil = PacienteStore.findByUid(uid) ?: run {
-                            toast("Perfil no encontrado, completa tu registro.")
-                            startActivity(Intent(this, RegistroActivity::class.java).apply {
-                                putExtra("prefill_email", auth.currentUser?.email ?: correo)
-                            })
-                            return@addOnCompleteListener
-                        }
-
-                        saveSession(perfil)
-                        toast("Bienvenido, ${perfil.nombreCompleto}")
-                        routeByRole(perfil)
-                        finish()
                     } else {
-                        toast("Usuario y/o contraseña equivocados.")
+                        toast("Usuario o contraseña incorrectos.")
                     }
                 }
                 .addOnFailureListener {
                     toast(it.localizedMessage ?: "Error inesperado al iniciar sesión.")
                 }
         }
+
+        //Recuperar contraseña
+        tvOlvidasteContra.setOnClickListener {
+            mostrarDialogoRecuperarContra()
+        }
     }
 
-    public override fun onStart() {
+    override fun onStart() {
         super.onStart()
-
-        val forceLogin = intent?.getBooleanExtra("forceLogin", false) == true
-        if (forceLogin) return
-
-        val currentUser = auth.currentUser ?: return
-        val perfil = PacienteStore.findByUid(currentUser.uid) ?: run {
-            // Si hay sesión sin perfil, redirige a completar registro
-            startActivity(Intent(this, RegistroActivity::class.java).apply {
-                putExtra("prefill_email", currentUser.email ?: "")
-            })
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            saveSession(currentUser.uid, currentUser.email ?: "")
+            startActivity(Intent(this, MisCitasPacienteActivity::class.java))
             finish()
-            return
         }
-
-        saveSession(perfil)
-        routeByRole(perfil)
-        finish()
     }
 
     // ---- Helpers ----
-
-    private fun saveSession(perfil: Paciente) {
+    private fun saveSession(uid: String, email: String) {
         val sp = getSharedPreferences("app_session", Context.MODE_PRIVATE)
         with(sp.edit()) {
-            putString("LOGGED_USER_ID", perfil.id)   // UID Firebase
-            putString("LOGGED_USER_ROLE", perfil.rol)
+            putString("LOGGED_USER_ID", uid)
+            putString("LOGGED_USER_EMAIL", email)
             apply()
         }
     }
 
-    private fun routeByRole(perfil: Paciente) {
-        when (normalizeRole(perfil.rol)) {
-            "medico" -> startActivity(Intent(this, MisCitasMedicoActivity::class.java))
-            "paciente" -> startActivity(Intent(this, MisCitasPacienteActivity::class.java))
-            else -> {
-                toast("Rol no reconocido: ${perfil.rol}")
-                // Opcional: enviar a una pantalla genérica o a ConfigurarPerfilActivity
+    private fun toast(msg: String) =
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+
+    private fun mostrarDialogoRecuperarContra() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Recuperar contraseña")
+
+        val input = EditText(this)
+        input.hint = "Ingresa tu correo electrónico"
+        builder.setView(input)
+
+        builder.setPositiveButton("Enviar") { dialog, _ ->
+            val correo = input.text.toString().trim()
+            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
+                toast("Correo no válido.")
+            } else {
+                auth.sendPasswordResetEmail(correo)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            toast("Correo de recuperación enviado.")
+                        } else {
+                            toast("Error al enviar correo: ${task.exception?.localizedMessage}")
+                        }
+                    }
             }
+            dialog.dismiss()
         }
-    }
 
-    private fun normalizeRole(raw: String?): String {
-        if (raw.isNullOrBlank()) return ""
-        val lower = raw.trim().lowercase()
-        val noAccents = Normalizer.normalize(lower, Normalizer.Form.NFD)
-            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
-        // Mapear variantes comunes
-        return when (noAccents) {
-            "medico", "doctor", "dr", "doctora" -> "medico"
-            "paciente" -> "paciente"
-            else -> noAccents
+        builder.setNegativeButton("Cancelar") { dialog, _ ->
+            dialog.dismiss()
         }
-    }
 
-    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        builder.show()
+    }
 
     companion object {
         fun intent(ctx: Context): Intent = Intent(ctx, LoginActivity::class.java)

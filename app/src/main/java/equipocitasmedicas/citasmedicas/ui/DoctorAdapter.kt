@@ -8,11 +8,11 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import equipocitasmedicas.citasmedicas.R
-import equipocitasmedicas.citasmedicas.model.DoctorItem
+import equipocitasmedicas.citasmedicas.model.MedicoPaciente
 
 class DoctorAdapter(
-    private val doctors: List<DoctorItem>,
-    private val onClick: (DoctorItem) -> Unit
+    private val doctors: List<MedicoPaciente>,
+    private val onClick: (MedicoPaciente) -> Unit
 ) : RecyclerView.Adapter<DoctorAdapter.DoctorViewHolder>() {
 
     inner class DoctorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -23,7 +23,8 @@ class DoctorAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DoctorViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_doctor, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_doctor, parent, false)
         return DoctorViewHolder(view)
     }
 
@@ -31,17 +32,14 @@ class DoctorAdapter(
         val doctor = doctors[position]
         holder.tvNombre.text = doctor.nombreCompleto
         holder.tvEspecialidad.text = doctor.especialidad
-        holder.tvConsultorio.text = doctor.consultorio
+        holder.tvConsultorio.text = doctor.direccionConsultorio
 
-        // Cargar imagen con Glide
         Glide.with(holder.itemView)
             .load(doctor.fotoUrl ?: R.drawable.perfil_default)
             .circleCrop()
             .into(holder.ivDoctor)
 
-        holder.itemView.setOnClickListener {
-            onClick(doctor)
-        }
+        holder.itemView.setOnClickListener { onClick(doctor) }
     }
 
     override fun getItemCount(): Int = doctors.size
