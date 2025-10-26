@@ -4,7 +4,6 @@ plugins {
     id("kotlin-kapt")
     // Añadidos para firebase
     id("com.google.gms.google-services")
-
 }
 
 android {
@@ -52,15 +51,19 @@ dependencies {
 
     // Glide para cargar imágenes
     implementation("com.github.bumptech.glide:glide:4.15.1")
+    implementation(libs.firebase.database)
     kapt("com.github.bumptech.glide:compiler:4.15.1")
 
-    // Firebase Authentication
-    implementation("com.google.firebase:firebase-auth-ktx:22.3.0")
-    // Firebase Firestore
-    implementation("com.google.firebase:firebase-firestore-ktx:24.7.1")
+    // Firebase BOM - Gestiona todas las versiones de Firebase automáticamente
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+
+    // Firebase (sin especificar versión, el BOM las controla)
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    // ELIMINA ESTA LÍNEA: implementation("com.google.firebase:firebase-firestore-ktx:24.x.x")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
-

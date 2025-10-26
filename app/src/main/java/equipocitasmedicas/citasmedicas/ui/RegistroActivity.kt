@@ -12,18 +12,18 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import equipocitasmedicas.citasmedicas.R
 import java.util.Calendar
 
 class RegistroActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private val db = Firebase.firestore
+    private lateinit var db: FirebaseFirestore
 
-    // Campos que se ocupan para acceder desde toggleMedicoFields
     private lateinit var etEspecialidad: EditText
     private lateinit var etDireccionConsultorio: EditText
 
@@ -32,6 +32,7 @@ class RegistroActivity : AppCompatActivity() {
         setContentView(R.layout.activity_registrarse)
 
         auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         val etNombre = findViewById<EditText>(R.id.et_nombre_completo)
         val etCorreo = findViewById<EditText>(R.id.et_correo)
@@ -62,13 +63,11 @@ class RegistroActivity : AppCompatActivity() {
             )
         )
 
-        // Mostrar u ocultar campos extra según el rol
         etRol.setOnItemClickListener { parent, _, position, _ ->
             val selectedRole = parent.getItemAtPosition(position).toString()
             toggleMedicoFields(selectedRole)
         }
 
-        // Selector de fecha
         etFecha.setOnClickListener {
             val calendario = Calendar.getInstance()
             DatePickerDialog(
@@ -198,7 +197,6 @@ class RegistroActivity : AppCompatActivity() {
         }
     }
 
-    // Función movida a nivel de clase
     private fun toggleMedicoFields(role: String) {
         if (role.equals("Médico", ignoreCase = true)) {
             etEspecialidad.visibility = View.VISIBLE
