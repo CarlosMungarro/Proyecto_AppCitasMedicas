@@ -132,28 +132,36 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val citaCalendar = selectedTime ?: selectedDate!!
             val pacienteId = user.uid
-            val pacienteNombre = user.displayName ?: user.email ?: "Paciente sin nombre"
 
-            val cita = Cita(
-                pacienteId = pacienteId,
-                pacienteNombre = pacienteNombre,
-                medicoId = selectedDoctor!!.id,
-                medicoNombre = selectedDoctor!!.nombreCompleto,
-                medicoEspecialidad = selectedDoctor!!.especialidad,
-                fechaHora = Timestamp(citaCalendar.time),
-                estado = "pendiente",
-                notas = motivo
-            )
+            // Obtener nombre del paciente desde Firestore
+            db.collection("pacientes").document(pacienteId).get()
+                .addOnSuccessListener { doc ->
+                    val pacienteNombre = doc.getString("nombre") ?: "Paciente sin nombre"
+                    val citaCalendar = selectedTime ?: selectedDate!!
 
-            db.collection("citas").add(cita)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Cita agendada correctamente", Toast.LENGTH_SHORT).show()
-                    finish()
+                    val cita = Cita(
+                        pacienteId = pacienteId,
+                        pacienteNombre = pacienteNombre,
+                        medicoId = selectedDoctor!!.id,
+                        medicoNombre = selectedDoctor!!.nombreCompleto,
+                        medicoEspecialidad = selectedDoctor!!.especialidad,
+                        fechaHora = Timestamp(citaCalendar.time),
+                        estado = "pendiente",
+                        notas = motivo
+                    )
+
+                    db.collection("citas").add(cita)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Cita agendada correctamente", Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Error al agendar cita: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
                 }
-                .addOnFailureListener { e ->
-                    Toast.makeText(this, "Error al agendar cita: ${e.message}", Toast.LENGTH_SHORT).show()
+                .addOnFailureListener {
+                    Toast.makeText(this, "Error al obtener datos del paciente", Toast.LENGTH_SHORT).show()
                 }
         }
     }

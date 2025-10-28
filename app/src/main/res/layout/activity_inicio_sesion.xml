@@ -20,7 +20,7 @@
         android:layout_gravity="center"/>
     <EditText
         android:id="@+id/et_usuario"
-        android:layout_width="150dp"
+        android:layout_width="200dp"
         android:layout_height="50dp"
         android:hint=" Correo"
         android:textSize="15dp"
@@ -37,7 +37,7 @@
         android:layout_gravity="center"/>
     <EditText
         android:id="@+id/et_contra"
-        android:layout_width="150dp"
+        android:layout_width="200dp"
         android:layout_height="50dp"
         android:hint="Contraseña"
         android:textSize="15sp"

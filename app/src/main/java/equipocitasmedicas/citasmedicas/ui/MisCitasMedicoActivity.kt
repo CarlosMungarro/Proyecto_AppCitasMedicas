@@ -1,209 +1,226 @@
 package equipocitasmedicas.citasmedicas.ui
 
-
-import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ListenerRegistration
 import equipocitasmedicas.citasmedicas.R
+import equipocitasmedicas.citasmedicas.databinding.ActivityMisCitasMedicoBinding
 import equipocitasmedicas.citasmedicas.model.CitasMedico
-import java.text.SimpleDateFormat
+import equipocitasmedicas.citasmedicas.model.ItemCitasMedico
 import java.util.*
 
 class MisCitasMedicoActivity : AppCompatActivity() {
 
-    private lateinit var rvCitas: RecyclerView
+    private lateinit var binding: ActivityMisCitasMedicoBinding
     private lateinit var adapter: CitasMedicoAdapter
-    private lateinit var tvFechaActual: TextView
-    private lateinit var btnDia: Button
-    private lateinit var btnSemana: Button
-    private lateinit var progressBar: ProgressBar
-    private var medicoUid: String = ""
-    private var filtroDia: Boolean = true
+    private var todasLasCitas: List<CitasMedico> = listOf()
+    private var listenerCitas: ListenerRegistration? = null
+    private var filtroActual = "hoy"
 
-    private val db = FirebaseFirestore.getInstance()
-
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_mis_citas_medico)
+        binding = ActivityMisCitasMedicoBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        val uid = getSharedPreferences("app_session", Context.MODE_PRIVATE)
-            .getString("LOGGED_USER_ID", null)
-
-        if (uid.isNullOrBlank()) {
-            Toast.makeText(this, "Sesión no encontrada. Inicia sesión.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
-        }
-        medicoUid = uid
-
-        initViews()
         setupRecyclerView()
-        setupButtons()
-        setupBottomNavigation()
-        setupFAB()
+        obtenerCitasEnTiempoReal()
+        configurarBottomNavigation()
         actualizarFecha()
-        cargarCitasDesdeFirebase()
-    }
 
-    private fun initViews() {
-        rvCitas = findViewById(R.id.rvCitasMedico)
-        tvFechaActual = findViewById(R.id.tvFechaActual)
-        btnDia = findViewById(R.id.btnDia)
-        btnSemana = findViewById(R.id.btnSemana)
-        progressBar = findViewById(R.id.progressBar)
+        // 🔹 Mostrar por defecto las citas de hoy
+        filtroActual = "hoy"
+        binding.btnDia.setBackgroundColor(resources.getColor(R.color.azulLetrasHeader))
+        binding.btnSemana.setBackgroundColor(resources.getColor(android.R.color.darker_gray))
+
+        binding.btnDia.setOnClickListener {
+            filtroActual = "hoy"
+            mostrarCitasHoy()
+            binding.btnDia.setBackgroundColor(resources.getColor(R.color.azulLetrasHeader))
+            binding.btnSemana.setBackgroundColor(resources.getColor(android.R.color.darker_gray))
+        }
+
+        binding.btnSemana.setOnClickListener {
+            filtroActual = "semana"
+            mostrarCitasEstaSemana()
+            binding.btnSemana.setBackgroundColor(resources.getColor(R.color.azulLetrasHeader))
+            binding.btnDia.setBackgroundColor(resources.getColor(android.R.color.darker_gray))
+        }
     }
 
     private fun setupRecyclerView() {
-        adapter = CitasMedicoAdapter(emptyList()) { cita ->
-            val intent = Intent(this, DetalleMedicoActivity::class.java)
+        adapter = CitasMedicoAdapter(mutableListOf()) { cita ->
+            val db = FirebaseFirestore.getInstance()
+            db.collection("pacientes").document(cita.pacienteId).get()
+                .addOnSuccessListener { pacienteDoc ->
+                    if (pacienteDoc != null && pacienteDoc.exists()) {
+                        val fechaNacimiento = pacienteDoc.getString("fechaNacimiento") ?: "--"
+                        val genero = pacienteDoc.getString("genero") ?: "--"
+                        val telefono = pacienteDoc.getString("telefono") ?: "--"
 
-            // Agregar extras uno por uno
-            intent.putExtra("nombrePaciente", cita.pacienteNombre)
-            intent.putExtra("motivo", cita.notas)
-            intent.putExtra("estado", cita.estado)
-            intent.putExtra("pacienteId", cita.pacienteId)
-            intent.putExtra("fechaHora", cita.fechaHora?.toString() ?: "Sin fecha")
-
-            startActivity(intent)
+                        val intent = Intent(this, DetalleMedicoActivity::class.java).apply {
+                            putExtra("citaId", cita.id) // 🔹 Agregar ID del documento
+                            putExtra("nombrePaciente", cita.pacienteNombre)
+                            putExtra("motivo", cita.notas)
+                            putExtra("estado", cita.estado)
+                            putExtra("fechaHora", cita.fechaHora?.toDate()?.time ?: 0L)
+                            putExtra("fechaNacimiento", fechaNacimiento)
+                            putExtra("genero", genero)
+                            putExtra("telefono", telefono)
+                        }
+                        startActivity(intent)
+                    } else {
+                        Toast.makeText(this, "No se encontró información del paciente", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Error al obtener datos del paciente", Toast.LENGTH_SHORT).show()
+                }
         }
-        rvCitas.layoutManager = LinearLayoutManager(this)
-        rvCitas.adapter = adapter
+
+
+        binding.rvCitasMedico.layoutManager = LinearLayoutManager(this)
+        binding.rvCitasMedico.adapter = adapter
     }
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun actualizarBotones() {
-        if (filtroDia) {
-            btnDia.backgroundTintList = getColorStateList(R.color.azul_boton_plus)
-            btnSemana.backgroundTintList = getColorStateList(android.R.color.darker_gray)
-        } else {
-            btnDia.backgroundTintList = getColorStateList(android.R.color.darker_gray)
-            btnSemana.backgroundTintList = getColorStateList(R.color.azul_boton_plus)
-        }
+
+    private fun obtenerCitasEnTiempoReal() {
+        binding.progressBar.visibility = View.VISIBLE
+        val db = FirebaseFirestore.getInstance()
+        listenerCitas = db.collection("citas")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(
+                        this,
+                        "Error al cargar las citas: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@addSnapshotListener
+                }
+
+                val listaCitas = mutableListOf<CitasMedico>()
+                snapshot?.forEach { documento ->
+                    val cita = CitasMedico(
+                        id = documento.id, // 🔹 Guardar ID del documento
+                        estado = documento.getString("estado") ?: "pendiente",
+                        fechaHora = documento.getTimestamp("fechaHora"),
+                        medicoEspecialidad = documento.getString("medicoEspecialidad") ?: "",
+                        medicoId = documento.getString("medicoId") ?: "",
+                        medicoNombre = documento.getString("medicoNombre") ?: "",
+                        notas = documento.getString("notas") ?: "",
+                        pacienteId = documento.getString("pacienteId") ?: "",
+                        pacienteNombre = documento.getString("pacienteNombre") ?: ""
+                    )
+
+                    listaCitas.add(cita)
+                }
+
+                todasLasCitas = listaCitas
+
+                // 🔹 Mostrar citas según el filtro activo
+                when (filtroActual) {
+                    "hoy" -> mostrarCitasHoy()
+                    "semana" -> mostrarCitasEstaSemana()
+                }
+
+                binding.progressBar.visibility = View.GONE
+            }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun setupButtons() {
-        btnDia.setOnClickListener {
-            filtroDia = true
-            actualizarBotones()
-            cargarCitasDesdeFirebase()
+    private fun mostrarCitasHoy() {
+        val zonaHoraria = TimeZone.getTimeZone("America/Hermosillo")
+        val hoy = Calendar.getInstance(zonaHoraria)
+        val diaHoy = hoy.get(Calendar.DAY_OF_YEAR)
+        val anioHoy = hoy.get(Calendar.YEAR)
+
+        val citasHoy = todasLasCitas.filter { cita ->
+            cita.fechaHora?.toDate()?.let { fecha ->
+                val calCita = Calendar.getInstance(zonaHoraria)
+                calCita.time = fecha
+                calCita.get(Calendar.DAY_OF_YEAR) == diaHoy &&
+                        calCita.get(Calendar.YEAR) == anioHoy
+            } ?: false
         }
-        btnSemana.setOnClickListener {
-            filtroDia = false
-            actualizarBotones()
-            cargarCitasDesdeFirebase()
+
+        val items = mutableListOf<ItemCitasMedico>()
+        if (citasHoy.isNotEmpty()) {
+            val formatoDia = java.text.SimpleDateFormat("EEEE", Locale("es", "MX"))
+            formatoDia.timeZone = zonaHoraria
+            val nombreDia = formatoDia.format(citasHoy[0].fechaHora!!.toDate())
+                .replaceFirstChar { it.uppercaseChar() }
+
+            items.add(ItemCitasMedico.Dia(nombreDia))
+            citasHoy.forEach { cita ->
+                items.add(ItemCitasMedico.Cita(cita))
+            }
         }
+
+        adapter.actualizarItems(items)
+    }
+
+    private fun mostrarCitasEstaSemana() {
+        val zonaHoraria = TimeZone.getTimeZone("America/Hermosillo")
+        val calendario = Calendar.getInstance(zonaHoraria)
+        calendario.firstDayOfWeek = Calendar.MONDAY
+        calendario.set(Calendar.HOUR_OF_DAY, 0)
+        calendario.set(Calendar.MINUTE, 0)
+        calendario.set(Calendar.SECOND, 0)
+        calendario.set(Calendar.MILLISECOND, 0)
+
+        val inicioSemana = calendario.clone() as Calendar
+        inicioSemana.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+
+        val finSemana = calendario.clone() as Calendar
+        finSemana.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        finSemana.set(Calendar.HOUR_OF_DAY, 23)
+        finSemana.set(Calendar.MINUTE, 59)
+        finSemana.set(Calendar.SECOND, 59)
+
+        val citasSemana = todasLasCitas.filter { cita ->
+            cita.fechaHora?.toDate()?.let { fecha ->
+                !fecha.before(inicioSemana.time) && !fecha.after(finSemana.time)
+            } ?: false
+        }.sortedBy { it.fechaHora }
+
+        val items = mutableListOf<ItemCitasMedico>()
+        val formatoDia = java.text.SimpleDateFormat("EEEE", Locale("es", "MX"))
+        formatoDia.timeZone = zonaHoraria
+
+        val citasPorDia = citasSemana.groupBy { cita ->
+            formatoDia.format(cita.fechaHora!!.toDate()).replaceFirstChar { it.uppercaseChar() }
+        }
+
+        citasPorDia.forEach { (nombreDia, citasDelDia) ->
+            items.add(ItemCitasMedico.Dia(nombreDia))
+            citasDelDia.forEach { cita ->
+                items.add(ItemCitasMedico.Cita(cita))
+            }
+        }
+
+        adapter.actualizarItems(items)
     }
 
     private fun actualizarFecha() {
-        val calendario = Calendar.getInstance()
-        val formato = SimpleDateFormat("EEEE dd 'de' MMMM", Locale("es", "ES"))
+        val zonaHoraria = TimeZone.getTimeZone("America/Hermosillo")
+        val calendario = Calendar.getInstance(zonaHoraria)
+        val formato = java.text.SimpleDateFormat("EEEE dd 'de' MMMM", Locale("es", "MX"))
+        formato.timeZone = zonaHoraria
         val fechaTexto = formato.format(calendario.time)
         val fechaCapitalizada = fechaTexto.replaceFirstChar {
             if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
         }
-        tvFechaActual.text = "Hoy, $fechaCapitalizada"
+        binding.tvFechaActual.text = "Hoy, $fechaCapitalizada"
     }
 
-    private fun cargarCitasDesdeFirebase() {
-        progressBar.visibility = View.VISIBLE
-
-        val calendario = Calendar.getInstance()
-        val inicioRango: Date
-        val finRango: Date
-
-        if (filtroDia) {
-            // Rango del día actual (00:00 a 23:59)
-            calendario.set(Calendar.HOUR_OF_DAY, 0)
-            calendario.set(Calendar.MINUTE, 0)
-            calendario.set(Calendar.SECOND, 0)
-            inicioRango = calendario.time
-
-            calendario.set(Calendar.HOUR_OF_DAY, 23)
-            calendario.set(Calendar.MINUTE, 59)
-            calendario.set(Calendar.SECOND, 59)
-            finRango = calendario.time
-        } else {
-            // Rango de la semana actual (lunes a domingo)
-            calendario.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-            calendario.set(Calendar.HOUR_OF_DAY, 0)
-            calendario.set(Calendar.MINUTE, 0)
-            calendario.set(Calendar.SECOND, 0)
-            inicioRango = calendario.time
-
-            calendario.add(Calendar.DAY_OF_YEAR, 6)
-            calendario.set(Calendar.HOUR_OF_DAY, 23)
-            calendario.set(Calendar.MINUTE, 59)
-            calendario.set(Calendar.SECOND, 59)
-            finRango = calendario.time
-        }
-
-        // Convertir Date a Timestamp para Firestore
-        val inicioTimestamp = Timestamp(inicioRango)
-        val finTimestamp = Timestamp(finRango)
-
-        // Consulta a Firebase Firestore
-        db.collection("citas")
-            .whereEqualTo("medicoId", medicoUid)
-            .whereGreaterThanOrEqualTo("fechaHora", inicioTimestamp)
-            .whereLessThanOrEqualTo("fechaHora", finTimestamp)
-            .orderBy("fechaHora", Query.Direction.ASCENDING)
-            .get()
-            .addOnSuccessListener { documents ->
-                progressBar.visibility = View.GONE
-                val citas = mutableListOf<CitasMedico>()
-
-                for (document in documents) {
-                    try {
-                        val cita = document.toObject(CitasMedico::class.java)
-                        citas.add(cita)
-                    } catch (e: Exception) {
-                        Log.e("Firebase", "Error al parsear cita: ${e.message}")
-                    }
-                }
-
-                adapter.actualizarCitas(citas)
-
-                if (citas.isEmpty()) {
-                    Toast.makeText(
-                        this,
-                        if (filtroDia) "No hay citas para hoy" else "No hay citas esta semana",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-            .addOnFailureListener { exception ->
-                progressBar.visibility = View.GONE
-                Log.e("Firebase", "Error al cargar citas: ${exception.message}")
-                Toast.makeText(
-                    this,
-                    "Error al cargar las citas: ${exception.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-    }
-
-    private fun setupBottomNavigation() {
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationMedico)
-        bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
+    private fun configurarBottomNavigation() {
+        binding.bottomNavigationMedico.selectedItemId = R.id.nav_citas
+        binding.bottomNavigationMedico.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_citas -> true
                 R.id.nav_perfil -> {
                     startActivity(Intent(this, ConfigurarPerfilActivity::class.java))
                     true
@@ -217,16 +234,13 @@ class MisCitasMedicoActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupFAB() {
-        val fab = findViewById<FloatingActionButton>(R.id.btnAgregarCitaMedico)
-        fab.setOnClickListener {
-            Toast.makeText(this, "Agregar nueva cita", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        cargarCitasDesdeFirebase()
+    override fun onDestroy() {
+        super.onDestroy()
+        listenerCitas?.remove()
     }
 }
+
+
+
+
 

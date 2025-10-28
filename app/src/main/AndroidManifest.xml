@@ -39,6 +39,11 @@
             android:exported="false" />
         <activity android:name=".ui.MisCitasPacienteActivity" />
 
+        <activity android:name=".ui.DetalleMedicoActivity"
+            android:exported="false">
+        </activity>
+
+
 
         <activity
             android:name=".ui.LoginActivity"

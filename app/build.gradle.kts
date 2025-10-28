@@ -52,6 +52,7 @@ dependencies {
     // Glide para cargar imágenes
     implementation("com.github.bumptech.glide:glide:4.15.1")
     implementation(libs.firebase.database)
+    implementation(libs.androidx.tools.core)
     kapt("com.github.bumptech.glide:compiler:4.15.1")
 
     // Firebase BOM - Gestiona todas las versiones de Firebase automáticamente

@@ -1,14 +1,18 @@
 package equipocitasmedicas.citasmedicas.model
 
-import java.security.Timestamp
+import com.google.firebase.Timestamp
+
 
 data class CitasMedico(
-    val pacienteId: String = "",
-    val pacienteNombre: String = "",
+    val id: String = "", // 🔹 ID del documento
+    val estado: String = "pendiente",
+    val fechaHora: com.google.firebase.Timestamp? = null,
+    val medicoEspecialidad: String = "",
     val medicoId: String = "",
     val medicoNombre: String = "",
-    val medicoEspecialidad: String = "",
-    val fechaHora: Timestamp? = null,
-    val estado: String = "pendiente",
-    val notas: String = ""
+    val notas: String = "",
+    val pacienteId: String = "",
+    val pacienteNombre: String = ""
 )
+
+

@@ -41,10 +41,10 @@ class MisCitasPacienteActivity : AppCompatActivity() {
         rvCitas.layoutManager = LinearLayoutManager(this)
 
         adapter = CitaAdapter(mutableListOf()) { citaSeleccionada ->
-            startActivity(
-                Intent(this, DetallePacienteActivity::class.java)
-                    .putExtra("CITA_ID", citaSeleccionada.pacienteId)
-            )
+            // ✅ Enviamos el ID real del documento de Firebase, NO el pacienteId
+            val intent = Intent(this, DetallePacienteActivity::class.java)
+            intent.putExtra("CITA_ID", citaSeleccionada.id)
+            startActivity(intent)
         }
         rvCitas.adapter = adapter
 
@@ -72,7 +72,9 @@ class MisCitasPacienteActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { snapshot ->
                 val citas = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Cita::class.java)
+                    val cita = doc.toObject(Cita::class.java)
+                    cita?.id = doc.id // 🔹 Guardamos el ID del documento
+                    cita
                 }
                 adapter.updateCitas(citas)
             }

@@ -1,6 +1,7 @@
 package equipocitasmedicas.citasmedicas.model
 
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.Exclude
 
 data class Cita(
     val pacienteId: String = "",
@@ -10,5 +11,8 @@ data class Cita(
     val medicoEspecialidad: String = "",
     val fechaHora: Timestamp? = null,
     val estado: String = "pendiente",
-    val notas: String = ""
+    val notas: String = "",
+    @get:Exclude
+    var id: String = "" // Solo para uso local
 )
+
