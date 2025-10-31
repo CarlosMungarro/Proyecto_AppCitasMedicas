@@ -180,22 +180,15 @@
                 android:gravity="center"
                 android:orientation="horizontal">
 
-                <Switch
-                    android:id="@+id/switchDarkMode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-                    android:text="Modo oscuro"
-                    android:textColor="@android:color/black"
-                    android:textStyle="bold" />
 
-                <Button
+
+                    <TextView
                     android:id="@+id/btnCerrarSesion"
-                    android:layout_width="136dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:background="@drawable/btn_cerrar_sesion"
+                    android:layout_marginStart="0dp"
                     android:text="Cerrar sesión"
-                    android:textColor="@color/rojoPrincipal"
+                    android:textColor="@color/black"
                     android:textStyle="bold" />
             </LinearLayout>
 
