@@ -152,6 +152,18 @@
                 android:textColor="@color/black"
                 android:visibility="gone" />
 
+            <EditText
+                android:id="@+id/editCedula"
+                android:layout_width="335dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/borde_configurar"
+                android:hint="Cédula (opcional)"
+                android:inputType="text"
+                android:padding="10dp"
+                android:textColor="@color/black"
+                android:visibility="gone"/>
+
             <Button
                 android:id="@+id/btnCambiarContrasena"
                 android:layout_width="wrap_content"

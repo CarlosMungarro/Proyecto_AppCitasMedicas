@@ -1,3 +1,4 @@
+// app/src/main/java/equipocitasmedicas/citasmedicas/ui/ConfigurarPerfilActivity.kt
 package equipocitasmedicas.citasmedicas.ui
 
 import android.content.Context
@@ -36,12 +37,9 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
         binding = ActivityConfigurarPerfilBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val currentUser = auth.currentUser
-        if (currentUser == null) {
+        val currentUser = auth.currentUser ?: run {
             toast("Sesión no encontrada. Por favor inicia sesión.")
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
+            startActivity(Intent(this, LoginActivity::class.java)); finish(); return
         }
 
         setupListeners()
@@ -64,35 +62,29 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
 
     private fun loadProfileImage() {
         val sp = getSharedPreferences("app_session", Context.MODE_PRIVATE)
-        val uriString = sp.getString("PROFILE_IMAGE_URI_${auth.currentUser?.uid}", null)
-        uriString?.let { binding.imgPerfil.setImageURI(Uri.parse(it)) }
+        sp.getString("PROFILE_IMAGE_URI_${auth.currentUser?.uid}", null)
+            ?.let { binding.imgPerfil.setImageURI(Uri.parse(it)) }
     }
 
     private fun logout() {
         auth.signOut()
-        val sp = getSharedPreferences("app_session", Context.MODE_PRIVATE)
-        sp.edit().clear().apply()
+        getSharedPreferences("app_session", Context.MODE_PRIVATE).edit().clear().apply()
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
+        startActivity(intent); finish()
     }
 
     private fun loadUserData(uid: String) {
         db.collection("pacientes").document(uid).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
-                    val paciente = snapshot.toObject(Paciente::class.java)
-                    paciente?.let { populatePacienteData(it) }
+                    snapshot.toObject(Paciente::class.java)?.let { populatePacienteData(it) }
                 } else {
                     db.collection("medicos").document(uid).get()
                         .addOnSuccessListener { docMedico ->
                             if (docMedico.exists()) {
-                                val medico = docMedico.toObject(Medico::class.java)
-                                medico?.let { populateMedicoData(it) }
-                            } else {
-                                toast("Usuario no encontrado")
-                            }
+                                docMedico.toObject(Medico::class.java)?.let { populateMedicoData(it) }
+                            } else toast("Usuario no encontrado")
                         }
                 }
             }
@@ -108,6 +100,7 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
 
         binding.editEspecialidad.visibility = View.GONE
         binding.editDireccionConsultorio.visibility = View.GONE
+        binding.editCedula?.visibility = View.GONE
     }
 
     private fun populateMedicoData(m: Medico) {
@@ -121,6 +114,10 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
         binding.editEspecialidad.setText(m.especialidad)
         binding.editDireccionConsultorio.visibility = View.VISIBLE
         binding.editDireccionConsultorio.setText(m.direccionConsultorio)
+
+        // cédula (opcional)
+        binding.editCedula?.visibility = View.VISIBLE
+        binding.editCedula?.setText(m.cedula.orEmpty())
     }
 
     private fun saveUserData() {
@@ -145,7 +142,9 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
                 } else {
                     val especialidad = binding.editEspecialidad.text.toString().trim()
                     val direccion = binding.editDireccionConsultorio.text.toString().trim()
-                    val medicoUpdate = mapOf(
+                    val cedula = binding.editCedula?.text?.toString()?.trim().orEmpty()
+
+                    val medicoUpdate = mutableMapOf<String, Any>(
                         "nombreCompleto" to nombre,
                         "fechaNacimiento" to fecha,
                         "genero" to genero,
@@ -153,6 +152,8 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
                         "especialidad" to especialidad,
                         "direccionConsultorio" to direccion
                     )
+                    if (cedula.isNotEmpty()) medicoUpdate["cedula"] = cedula else medicoUpdate["cedula"] = ""
+
                     db.collection("medicos").document(uid).update(medicoUpdate)
                         .addOnSuccessListener { toast("Médico actualizado") }
                         .addOnFailureListener { toast("Error al actualizar médico") }
@@ -163,33 +164,23 @@ class ConfigurarPerfilActivity : AppCompatActivity() {
         auth.currentUser?.updateProfile(profileUpdates)
     }
 
-    /** 🔒 Cambiar contraseña con un AlertDialog **/
     private fun showChangePasswordDialog() {
         val editText = EditText(this)
         editText.hint = "Nueva contraseña (mínimo 6 caracteres)"
-
         AlertDialog.Builder(this)
             .setTitle("Cambiar contraseña")
             .setMessage("Introduce tu nueva contraseña:")
             .setView(editText)
             .setPositiveButton("Cambiar") { _, _ ->
                 val newPassword = editText.text.toString().trim()
-                if (newPassword.length < 6) {
-                    toast("La contraseña debe tener al menos 6 caracteres")
-                    return@setPositiveButton
-                }
+                if (newPassword.length < 6) { toast("La contraseña debe tener al menos 6 caracteres"); return@setPositiveButton }
                 auth.currentUser?.updatePassword(newPassword)
-                    ?.addOnSuccessListener {
-                        toast("Contraseña actualizada correctamente")
-                    }
-                    ?.addOnFailureListener {
-                        toast("Error al actualizar contraseña: ${it.message}")
-                    }
+                    ?.addOnSuccessListener { toast("Contraseña actualizada correctamente") }
+                    ?.addOnFailureListener { toast("Error al actualizar contraseña: ${it.message}") }
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun toast(msg: String) =
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 }

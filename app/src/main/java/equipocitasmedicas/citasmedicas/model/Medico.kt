@@ -8,5 +8,6 @@ data class Medico(
     var telefono: String = "",
     var genero: String = "",
     var especialidad: String = "",
-    var direccionConsultorio: String = ""
+    var direccionConsultorio: String = "",
+    var cedula: String? = null // opcional
 )

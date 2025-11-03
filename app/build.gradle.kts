@@ -49,21 +49,19 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
-    // Glide para cargar imágenes
+    // Glide
     implementation("com.github.bumptech.glide:glide:4.15.1")
-    implementation(libs.firebase.database)
-    implementation(libs.androidx.tools.core)
     kapt("com.github.bumptech.glide:compiler:4.15.1")
 
-    // Firebase BOM - Gestiona todas las versiones de Firebase automáticamente
+    // --- Firebase BOM (gestiona versiones) ---
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
 
-    // Firebase (sin especificar versión, el BOM las controla)
+    // --- Firebase KTX (sin versión explícita) ---
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
-    // ELIMINA ESTA LÍNEA: implementation("com.google.firebase:firebase-firestore-ktx:24.x.x")
 
+    // TESTS
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
