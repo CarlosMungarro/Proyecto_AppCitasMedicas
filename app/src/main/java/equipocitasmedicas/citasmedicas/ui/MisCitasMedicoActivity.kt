@@ -89,8 +89,22 @@ class MisCitasMedicoActivity : AppCompatActivity() {
 
     private fun obtenerCitasEnTiempoReal() {
         binding.progressBar.visibility = View.VISIBLE
+
+        // 🔹 Obtener el ID del médico actual
+        val usuarioActual = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        val medicoIdActual = usuarioActual?.uid ?: ""
+
+        if (medicoIdActual.isEmpty()) {
+            Toast.makeText(this, "No se encontró el usuario médico actual", Toast.LENGTH_SHORT).show()
+            binding.progressBar.visibility = View.GONE
+            return
+        }
+
         val db = FirebaseFirestore.getInstance()
+
+        // 🔹 Filtrar las citas por el médico actual
         listenerCitas = db.collection("citas")
+            .whereEqualTo("medicoId", medicoIdActual)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     binding.progressBar.visibility = View.GONE
@@ -115,7 +129,6 @@ class MisCitasMedicoActivity : AppCompatActivity() {
                         pacienteId = documento.getString("pacienteId") ?: "",
                         pacienteNombre = documento.getString("pacienteNombre") ?: ""
                     )
-
                     listaCitas.add(cita)
                 }
 
@@ -130,6 +143,7 @@ class MisCitasMedicoActivity : AppCompatActivity() {
                 binding.progressBar.visibility = View.GONE
             }
     }
+
 
     private fun mostrarCitasHoy() {
         val zonaHoraria = TimeZone.getTimeZone("America/Hermosillo")

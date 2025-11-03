@@ -2,7 +2,6 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-
     android:id="@+id/scrollAgendarCita"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -24,8 +23,7 @@
             android:layout_height="95dp"
             android:paddingTop="25dp"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            >
+            android:gravity="center_vertical">
 
             <ImageView
                 android:id="@+id/btnAtras"
@@ -50,8 +48,7 @@
                 android:textColor="@color/azulLetrasHeader" />
         </LinearLayout>
 
-
-
+        <!-- BARRA DE BÚSQUEDA -->
         <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -73,31 +70,101 @@
                 android:textColorHint="@android:color/darker_gray" />
         </androidx.cardview.widget.CardView>
 
+        <!-- CONTENEDOR DE LISTA Y DISPONIBILIDAD -->
+        <FrameLayout
+            android:id="@+id/frameMedicos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
 
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="350dp"
-    android:orientation="vertical"
-    android:paddingTop="8dp"
-    >
+            <!-- LISTA DE MÉDICOS -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvMedicos"
+                android:layout_width="match_parent"
+                android:layout_height="350dp"
+                android:scrollbars="vertical"
+                android:layout_marginBottom="8dp" />
 
-    <!-- LISTA DE MÉDICOS -->
+            <!-- CARD DISPONIBILIDAD - con mejor diseño -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardDisponibilidad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="10dp"
+                app:cardUseCompatPadding="true"
+                android:padding="20dp"
+                app:cardBackgroundColor="@android:color/white"
+               >
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvMedicos"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="8dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
 
-        android:scrollbars="vertical" />
+                    <!-- Nombre -->
+                    <TextView
+                        android:id="@+id/tvNombreMedico"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dr. Carlos Pérez"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="#1565C0"
+                        android:layout_marginBottom="4dp" />
+
+                    <!-- Especialidad -->
+                    <TextView
+                        android:id="@+id/tvEspecialidadMedico"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Odontólogo"
+                        android:textSize="15sp"
+                        android:textColor="#777777"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Línea separadora -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#1565C0"
+                        android:alpha="0.2"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Disponibilidad -->
+                    <TextView
+                        android:id="@+id/tvDisponibilidad"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Cargando disponibilidad..."
+                        android:textColor="#333333"
+                        android:textSize="15sp"
+                        android:lineSpacingExtra="4dp"
+                        android:gravity="center_horizontal"
+                        android:layout_marginBottom="20dp" />
 
 
-</LinearLayout>
 
-
-
-
-
+                    <!-- Botón Cambiar Médico -->
+                    <Button
+                        android:id="@+id/btnCambiarMedico"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cambiar médico"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:backgroundTint="@color/azulLetrasHeader"
+                        android:paddingHorizontal="30dp"
+                        android:paddingVertical="8dp"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="5dp"
+                        android:stateListAnimator="@null"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </FrameLayout>
 
         <!-- FECHA Y HORA -->
         <LinearLayout
@@ -106,9 +173,8 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:layout_gravity="center"
-            >
+            android:layout_marginTop="16dp">
 
-            <!-- CARD FECHA -->
             <androidx.cardview.widget.CardView
                 android:layout_width="120dp"
                 android:layout_height="wrap_content"
@@ -122,19 +188,17 @@
                     android:layout_height="48dp"
                     android:padding="12dp"
                     android:hint="Fecha"
-                    android:gravity="center_vertical|center_horizontal"
+                    android:gravity="center"
                     android:background="@android:color/transparent"
                     android:focusable="false"
                     android:clickable="true"
-                    android:cursorVisible="false"/>
+                    android:cursorVisible="false" />
             </androidx.cardview.widget.CardView>
 
-            <!-- ESPACIO ENTRE TARJETAS -->
             <Space
                 android:layout_width="8dp"
                 android:layout_height="wrap_content" />
 
-            <!-- CARD HORA -->
             <androidx.cardview.widget.CardView
                 android:layout_width="120dp"
                 android:layout_height="wrap_content"
@@ -149,18 +213,15 @@
                     android:layout_height="48dp"
                     android:padding="12dp"
                     android:hint="Hora"
-                    android:gravity="center_vertical|center_horizontal"
+                    android:gravity="center"
                     android:background="@android:color/transparent"
                     android:focusable="false"
                     android:clickable="true"
-                    android:cursorVisible="false"/>
+                    android:cursorVisible="false" />
             </androidx.cardview.widget.CardView>
-
         </LinearLayout>
 
-
-
-
+        <!-- MOTIVO DE CONSULTA -->
         <androidx.cardview.widget.CardView
             android:layout_width="250dp"
             android:layout_height="130dp"
@@ -168,21 +229,18 @@
             app:cardElevation="8dp"
             android:layout_gravity="center"
             app:cardUseCompatPadding="true"
-            app:cardBackgroundColor="@android:color/white">
+            app:cardBackgroundColor="@android:color/white"
+            android:layout_marginTop="16dp">
 
-        <!-- MOTIVO DE LA CONSULTA -->
-        <EditText
-            android:id="@+id/etMotivo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:layout_gravity="center"
-            android:hint="Motivo de la consulta"
-            android:background="@drawable/borde_motivo"
-            android:inputType="textMultiLine"
-
-            />
-
+            <EditText
+                android:id="@+id/etMotivo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="15sp"
+                android:padding="10dp"
+                android:hint="Motivo de la consulta"
+                android:background="@android:color/transparent"
+                android:inputType="textMultiLine" />
         </androidx.cardview.widget.CardView>
 
         <!-- BOTONES -->
@@ -214,8 +272,7 @@
                 android:layout_height="48dp"
                 android:text="Confirmar"
                 android:textColor="@android:color/white"
-                android:backgroundTint="@color/azulLetrasHeader"
-                />
+                android:backgroundTint="@color/azulLetrasHeader" />
         </LinearLayout>
 
     </LinearLayout>
