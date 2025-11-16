@@ -93,6 +93,7 @@ class RegistroActivity : AppCompatActivity() {
             if (isMedico && (especialidad.isEmpty() || direccionConsultorio.isEmpty())) {
                 toast("Completa especialidad y dirección del consultorio."); return@setOnClickListener
             }
+            if (!isAgeAtLeast(fecha, 15)) { toast("Debes tener 15 años o más para registrarte."); return@setOnClickListener }
             if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) { toast("Correo inválido."); return@setOnClickListener }
             if (pass != pass2) { toast("Las contraseñas no coinciden."); return@setOnClickListener }
             if (!fecha.matches(Regex("""\d{4}-\d{2}-\d{2}"""))) { toast("Fecha debe ser YYYY-MM-DD."); return@setOnClickListener }
@@ -137,6 +138,33 @@ class RegistroActivity : AppCompatActivity() {
                     }
                 }
         }
+    }
+
+    private fun isAgeAtLeast(fechaYYYYMMDD: String, minYears: Int): Boolean {
+        val parts = fechaYYYYMMDD.split("-")
+        if (parts.size != 3) return false
+        val y = parts[0].toIntOrNull() ?: return false
+        val m = parts[1].toIntOrNull() ?: return false
+        val d = parts[2].toIntOrNull() ?: return false
+
+        val today = Calendar.getInstance()
+        val birth = Calendar.getInstance().apply {
+            set(Calendar.YEAR, y)
+            set(Calendar.MONTH, m - 1)
+            set(Calendar.DAY_OF_MONTH, d)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        var age = today.get(Calendar.YEAR) - birth.get(Calendar.YEAR)
+        if (today.get(Calendar.MONTH) < birth.get(Calendar.MONTH) ||
+            (today.get(Calendar.MONTH) == birth.get(Calendar.MONTH) && today.get(Calendar.DAY_OF_MONTH) < birth.get(Calendar.DAY_OF_MONTH))
+        ) {
+            age--
+        }
+        return age >= minYears
     }
 
     private fun toggleMedicoFields(role: String) {
