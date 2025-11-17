@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/background">
+
+    <!-- Copia contenido de activity_mis_citas_paciente.xml menos BottomNavigation -->
+    <include layout="@layout/include_paciente_home_content"/>
+</RelativeLayout>

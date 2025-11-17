@@ -87,7 +87,7 @@ class LoginActivity : AppCompatActivity() {
                     val rol = "Médico"
                     saveSession(uid, email, rol)
                     toast("Bienvenido Dr./Dra., $email")
-                    startActivity(Intent(this, MisCitasMedicoActivity::class.java))
+                    startActivity(Intent(this, MainMedicoActivity::class.java))
                     finish()
                 } else {
                     // Si no es médico, busca en pacientes
@@ -98,7 +98,7 @@ class LoginActivity : AppCompatActivity() {
                                 val rol = "Paciente"
                                 saveSession(uid, email, rol)
                                 toast("Bienvenido, $email")
-                                startActivity(Intent(this, MisCitasPacienteActivity::class.java))
+                                startActivity(Intent(this, MainPacienteActivity::class.java))
                                 finish()
                             } else {
                                 toast("No se encontró información del usuario.")

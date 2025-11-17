@@ -10,9 +10,5 @@
         android:id="@+id/nav_perfil"
         android:icon="@drawable/profile"
         android:title="Perfil" />
-    <item
-        android:id="@+id/nav_reloj"
-        android:icon="@drawable/reloj"
-        android:title="Disponibilidad" />
 
 </menu>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    tools:context="equipocitasmedicas.citasmedicas.ui.MisCitasMedicoActivity"
+    >
+
+    <!-- Encabezado -->
+    <LinearLayout
+        android:id="@+id/layoutHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="15dp"
+        android:padding="16dp">
+
+        <View
+            android:layout_width="7dp"
+            android:layout_height="90dp"
+            android:layout_marginStart="46dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/linea_horizontal" />
+
+        <TextView
+            android:id="@+id/textHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/mis_citas"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="@color/azulLetrasHeader" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/fecha"
+        android:orientation="horizontal"
+        android:layout_marginLeft="110dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/layoutHeader"
+        >
+        <TextView
+            android:id="@+id/tvFechaActual"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Hoy, Domingo 26 de Octubre"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
+
+
+
+    </LinearLayout>
+
+
+    <!-- Botones de filtro -->
+    <LinearLayout
+        android:id="@+id/filterLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/fecha"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnDia"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Hoy"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/azulLetrasHeader" />
+
+        <Button
+            android:id="@+id/btnSemana"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Esta Semana"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@android:color/darker_gray" />
+    </LinearLayout>
+
+    <!-- RecyclerView para las citas -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvCitasMedico"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/filterLayout"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        tools:listitem="@layout/item_cita_medico" />
+
+    <!-- ProgressBar (centrado en la pantalla) -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:indeterminateTint="@color/azulLetrasHeader" />
+
+
+
+
+</RelativeLayout>
