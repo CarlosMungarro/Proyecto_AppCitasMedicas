@@ -5,8 +5,10 @@ import android.app.TimePickerDialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.Timestamp
@@ -29,6 +31,8 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
     private var selectedDate: Calendar? = null
     private var selectedTime: Calendar? = null
 
+    private var duracionCitaMinutos: Int = 30 // Default 30 minutos
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAgendarCitaPacienteBinding.inflate(layoutInflater)
@@ -38,15 +42,14 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
             selectedDoctor = doctor
             Toast.makeText(this, "Seleccionaste a: ${doctor.nombreCompleto}", Toast.LENGTH_SHORT).show()
 
-            //Ocultar los demás médicos y mostrar solo el seleccionado
             filteredDoctors.clear()
             filteredDoctors.add(doctor)
             adapter.notifyDataSetChanged()
 
-            //Mostrar disponibilidad
-            mostrarDisponibilidad(doctor.id)
+            // Cargar duración de cita configurada por el médico
+            cargarDuracionCita(doctor.id)
 
-            //Ocultar el campo de búsqueda (opcional)
+            mostrarDisponibilidad(doctor.id)
             binding.etBuscarMedico.visibility = View.GONE
         }
 
@@ -60,24 +63,77 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
         setupButtons()
     }
 
+    private fun cargarDuracionCita(doctorId: String) {
+        db.collection("medicos").document(doctorId).get()
+            .addOnSuccessListener { doc ->
+                duracionCitaMinutos = doc.getLong("duracionCita")?.toInt() ?: 30
+                Log.d("AgendarCita", "Duración de cita: $duracionCitaMinutos minutos")
+            }
+            .addOnFailureListener {
+                duracionCitaMinutos = 30
+            }
+    }
+
     private fun loadDoctors() {
         db.collection("medicos").get()
             .addOnSuccessListener { snapshot ->
                 doctorsList.clear()
+                val doctoresConDisponibilidad = mutableListOf<MedicoPaciente>()
+
+                val totalDoctors = snapshot.size()
+                var processedDoctors = 0
+
                 for (doc in snapshot.documents) {
                     val id = doc.id
                     val nombre = doc.getString("nombreCompleto") ?: ""
                     val especialidad = doc.getString("especialidad") ?: ""
                     val consultorio = doc.getString("direccionConsultorio") ?: ""
                     val foto = doc.getString("fotoUrl")
-                    doctorsList.add(MedicoPaciente(id, nombre, especialidad, consultorio, foto))
+
+                    // ✅ FUNCIONALIDAD 5: Verificar si tiene disponibilidad antes de agregarlo
+                    verificarDisponibilidadMedico(id) { tieneDisponibilidad ->
+                        if (tieneDisponibilidad) {
+                            doctoresConDisponibilidad.add(
+                                MedicoPaciente(id, nombre, especialidad, consultorio, foto)
+                            )
+                        }
+
+                        processedDoctors++
+                        if (processedDoctors == totalDoctors) {
+                            doctorsList.addAll(doctoresConDisponibilidad)
+                            filteredDoctors.clear()
+                            filteredDoctors.addAll(doctorsList)
+                            adapter.notifyDataSetChanged()
+                        }
+                    }
                 }
-                filteredDoctors.clear()
-                filteredDoctors.addAll(doctorsList)
-                adapter.notifyDataSetChanged()
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Error al cargar médicos", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun verificarDisponibilidadMedico(doctorId: String, callback: (Boolean) -> Unit) {
+        db.collection("medicos").document(doctorId)
+            .collection("disponibilidad")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                var tieneDisponibilidad = false
+
+                for (doc in snapshot.documents) {
+                    val activo = doc.getBoolean("activo") == true
+                    val rangos = (doc.get("rangos") as? List<Map<String, String>>) ?: emptyList()
+
+                    if (activo && rangos.isNotEmpty()) {
+                        tieneDisponibilidad = true
+                        break
+                    }
+                }
+
+                callback(tieneDisponibilidad)
+            }
+            .addOnFailureListener {
+                callback(false)
             }
     }
 
@@ -105,20 +161,138 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
                 cal.set(year, month, dayOfMonth)
                 selectedDate = cal
                 binding.etFecha.setText("${dayOfMonth}/${month + 1}/$year")
+
+                // ✅ FUNCIONALIDAD 4: Cuando cambia la fecha, actualizar horas disponibles
+                if (selectedDoctor != null) {
+                    actualizarHorasDisponibles()
+                }
             }, now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH)).show()
         }
     }
 
+    private fun actualizarHorasDisponibles() {
+        if (selectedDoctor == null || selectedDate == null) return
+
+        val doctorId = selectedDoctor!!.id
+        val diaSemana = SimpleDateFormat("EEEE", Locale("es", "ES"))
+            .format(selectedDate!!.time).lowercase()
+
+        db.collection("medicos").document(doctorId)
+            .collection("disponibilidad").document(diaSemana)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (!doc.exists() || doc.getBoolean("activo") != true) {
+                    Toast.makeText(this, "El médico no atiende este día", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+
+                val rangos = (doc.get("rangos") as? List<Map<String, String>>) ?: emptyList()
+
+                // Obtener citas existentes del médico para ese día
+                obtenerCitasDelDia(doctorId, selectedDate!!) { citasOcupadas ->
+                    val horasDisponibles = generarHorasDisponibles(rangos, citasOcupadas)
+                    mostrarDropdownHoras(horasDisponibles)
+                }
+            }
+    }
+
+    private fun obtenerCitasDelDia(doctorId: String, fecha: Calendar, callback: (List<Int>) -> Unit) {
+        val inicioDia = Calendar.getInstance().apply {
+            time = fecha.time
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }
+
+        val finDia = Calendar.getInstance().apply {
+            time = fecha.time
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+        }
+
+        db.collection("citas")
+            .whereEqualTo("medicoId", doctorId)
+            .whereGreaterThanOrEqualTo("fechaHora", Timestamp(inicioDia.time))
+            .whereLessThanOrEqualTo("fechaHora", Timestamp(finDia.time))
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val horasOcupadas = snapshot.documents.mapNotNull { doc ->
+                    val timestamp = doc.getTimestamp("fechaHora")
+                    timestamp?.toDate()?.let { date ->
+                        val cal = Calendar.getInstance()
+                        cal.time = date
+                        cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+                    }
+                }
+                callback(horasOcupadas)
+            }
+            .addOnFailureListener {
+                callback(emptyList())
+            }
+    }
+
+    private fun generarHorasDisponibles(
+        rangos: List<Map<String, String>>,
+        citasOcupadas: List<Int>
+    ): List<String> {
+        val horasDisponibles = mutableListOf<String>()
+
+        rangos.forEach { rango ->
+            val inicio = parseHoraToMinutes(rango["inicio"])
+            val fin = parseHoraToMinutes(rango["fin"])
+
+            var horaActual = inicio
+            while (horaActual + duracionCitaMinutos <= fin) {
+                // Verificar que no esté ocupada
+                if (!citasOcupadas.contains(horaActual)) {
+                    val hora = horaActual / 60
+                    val minuto = horaActual % 60
+                    horasDisponibles.add(String.format("%02d:%02d", hora, minuto))
+                }
+                horaActual += duracionCitaMinutos
+            }
+        }
+
+        return horasDisponibles
+    }
+
+    private fun mostrarDropdownHoras(horas: List<String>) {
+        if (horas.isEmpty()) {
+            Toast.makeText(this, "No hay horarios disponibles para este día", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Selecciona una hora")
+        builder.setItems(horas.toTypedArray()) { _, which ->
+            val horaSeleccionada = horas[which]
+            binding.etHora.setText(horaSeleccionada)
+
+            // Actualizar selectedTime
+            val partes = horaSeleccionada.split(":")
+            val cal = selectedDate?.clone() as Calendar
+            cal.set(Calendar.HOUR_OF_DAY, partes[0].toInt())
+            cal.set(Calendar.MINUTE, partes[1].toInt())
+            selectedTime = cal
+        }
+        builder.show()
+    }
+
     private fun setupTimePicker() {
         binding.etHora.setOnClickListener {
-            val now = Calendar.getInstance()
-            TimePickerDialog(this, { _, hourOfDay, minute ->
-                val cal = selectedDate ?: Calendar.getInstance()
-                cal.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                cal.set(Calendar.MINUTE, minute)
-                selectedTime = cal
-                binding.etHora.setText(String.format("%02d:%02d", hourOfDay, minute))
-            }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), true).show()
+            if (selectedDate == null) {
+                Toast.makeText(this, "Primero selecciona una fecha", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (selectedDoctor == null) {
+                Toast.makeText(this, "Primero selecciona un médico", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // ✅ FUNCIONALIDAD 4: Mostrar dropdown en lugar de TimePicker libre
+            actualizarHorasDisponibles()
         }
     }
 
@@ -126,25 +300,42 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
         binding.btnCancelarCita.setOnClickListener { finish() }
 
         binding.btnConfirmarCita.setOnClickListener {
-            val user = FirebaseAuth.getInstance().currentUser
-            if (user == null) {
-                Toast.makeText(this, "Debes iniciar sesión para agendar una cita", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            mostrarDialogoConfirmacion()
+        }
+    }
 
-            if (selectedDoctor == null || selectedDate == null || selectedTime == null) {
-                Toast.makeText(this, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+    private fun mostrarDialogoConfirmacion() {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            Toast.makeText(this, "Debes iniciar sesión para agendar una cita", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-            val motivo = binding.etMotivo.text.toString().trim()
-            if (motivo.isEmpty()) {
-                Toast.makeText(this, "Por favor ingresa el motivo de la cita", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+        if (selectedDoctor == null || selectedDate == null || selectedTime == null) {
+            Toast.makeText(this, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
+            return
+        }
 
+        val motivo = binding.etMotivo.text.toString().trim()
+        if (motivo.isEmpty()) {
+            Toast.makeText(this, "Por favor ingresa el motivo de la cita", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Confirmar cita")
+        builder.setMessage(
+            "¿Estás seguro de agendar esta cita?\n\n" +
+                    "Médico: ${selectedDoctor?.nombreCompleto}\n" +
+                    "Fecha: ${binding.etFecha.text}\n" +
+                    "Hora: ${binding.etHora.text}\n" +
+                    "Motivo: $motivo"
+        )
+        builder.setPositiveButton("Sí, confirmar") { _, _ ->
             validarDisponibilidadYConflictos(user.uid, motivo)
         }
+        builder.setNegativeButton("Cancelar", null)
+        builder.show()
     }
 
     private fun mostrarDisponibilidad(doctorId: String) {
@@ -153,12 +344,10 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
         val recycler = binding.rvMedicos
         val buscar = binding.etBuscarMedico
 
-        //Ocultamos lista y buscador, y mostramos el card
         recycler.visibility = View.GONE
         buscar.visibility = View.GONE
         card.visibility = View.VISIBLE
 
-        //Cargar información del médico seleccionado
         binding.tvNombreMedico.text = selectedDoctor?.nombreCompleto ?: "Médico"
         binding.tvEspecialidadMedico.text = selectedDoctor?.especialidad ?: ""
 
@@ -179,7 +368,6 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
                     val activo = doc.getBoolean("activo") == true
                     val rangos = (doc.get("rangos") as? List<Map<String, String>>) ?: emptyList()
 
-                    //Agregamos sangría con espacios y saltos de línea
                     builder.append("$diaCapitalizado:\n")
 
                     if (!activo || rangos.isEmpty()) {
@@ -188,7 +376,7 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
                         rangos.forEach { rango ->
                             val inicio = rango["inicio"] ?: "--:--"
                             val fin = rango["fin"] ?: "--:--"
-                            builder.append("  \uD83D\uDD53 $inicio - $fin\n")
+                            builder.append("  🕓 $inicio - $fin\n")
                         }
                         builder.append("\n")
                     }
@@ -200,27 +388,22 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
                 tv.text = "Error al cargar disponibilidad."
             }
 
-        //Listener del botón Cambiar Médico
         binding.btnCambiarMedico.setOnClickListener {
-            // Mostrar lista y buscador
             recycler.visibility = View.VISIBLE
             buscar.visibility = View.VISIBLE
             card.visibility = View.GONE
 
-            // Restaurar la lista original
             filteredDoctors.clear()
             filteredDoctors.addAll(doctorsList)
             adapter.notifyDataSetChanged()
 
-            // Quitar selección
             selectedDoctor = null
+            selectedDate = null
+            selectedTime = null
+            binding.etFecha.text?.clear()
+            binding.etHora.text?.clear()
         }
     }
-
-
-
-
-
 
     private fun validarDisponibilidadYConflictos(pacienteId: String, motivo: String) {
         val doctorId = selectedDoctor!!.id
