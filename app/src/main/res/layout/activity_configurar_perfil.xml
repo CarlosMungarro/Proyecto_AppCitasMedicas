@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingTop="12dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="120dp">
 
         <!-- HEADER -->
         <LinearLayout
