@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <item
+        android:id="@+id/nav_agendas"
+        android:icon="@drawable/reloj"
+        android:title="Agendas" />
 
+    <item
+        android:id="@+id/nav_historial"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        android:title="Historial" />
 
     <item
         android:id="@+id/nav_perfil"
@@ -9,4 +17,3 @@
         android:title="Perfil" />
 
 </menu>
-

@@ -182,7 +182,7 @@
             android:layout_height="wrap_content"/>
     </LinearLayout>
 
-    <!-- Receta médica -->
+    <!-- Receta médica y botones -->
     <LinearLayout
         android:orientation="vertical"
         android:background="@drawable/bg_text_white"
@@ -207,6 +207,16 @@
             android:layout_gravity="center"
             android:backgroundTint="#2962FF"
             android:text="Ver receta"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/btnReprogramar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/azulLetrasHeader"
+            android:text="Reprogramar"
             android:textColor="@android:color/white" />
 
         <Button
