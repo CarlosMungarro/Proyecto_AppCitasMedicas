@@ -46,7 +46,6 @@ class DetallePacienteActivity : AppCompatActivity() {
             return
         }
 
-        // Cargar datos desde Firebase
         db.collection("citas").document(citaId)
             .get()
             .addOnSuccessListener { document ->
@@ -60,7 +59,6 @@ class DetallePacienteActivity : AppCompatActivity() {
                         tvEspecialidad.text = it.medicoEspecialidad
                         tvMotivo.text = it.notas.ifEmpty { "Sin motivo especificado" }
 
-                        // Fecha y hora
                         it.fechaHora?.toDate()?.let { fecha ->
                             val formatoFecha = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale.getDefault())
                             val formatoHora = SimpleDateFormat("hh:mm a", Locale.getDefault())
@@ -70,7 +68,6 @@ class DetallePacienteActivity : AppCompatActivity() {
 
                         ivPerfil.setImageResource(R.drawable.perfil_default)
 
-                        // Mostrar estado con color
                         val (textoEstado, colorEstado) = when (it.estado.lowercase(Locale.getDefault())) {
                             "pendiente" -> "Pendiente" to R.color.estado_pendiente
                             "confirmada" -> "Confirmada" to R.color.estado_confirmada
@@ -80,17 +77,14 @@ class DetallePacienteActivity : AppCompatActivity() {
                         }
 
                         tvEstado.text = textoEstado
-                        tvEstado.backgroundTintList =
-                            ContextCompat.getColorStateList(this, colorEstado)
+                        tvEstado.backgroundTintList = ContextCompat.getColorStateList(this, colorEstado)
 
-                        // ✅ FUNCIONALIDAD #9: No permitir cancelar si está completada o cancelada
                         if (it.estado.lowercase() == "completada" || it.estado.lowercase() == "cancelada") {
                             btnCancelarCita.isEnabled = false
                             btnCancelarCita.alpha = 0.5f
                             btnCancelarCita.text = "No se puede cancelar"
                         }
 
-                        // ✅ Deshabilitar reprogramar si está cancelada o completada
                         if (it.estado.lowercase() == "completada" || it.estado.lowercase() == "cancelada") {
                             btnReprogramar.isEnabled = false
                             btnReprogramar.alpha = 0.5f
@@ -110,20 +104,17 @@ class DetallePacienteActivity : AppCompatActivity() {
             // Abrir receta si existe
         }
 
-        // ✅ FUNCIONALIDAD #7: Botón Reprogramar con modal de confirmación
         btnReprogramar.setOnClickListener {
             if (citaActual == null) {
                 Toast.makeText(this, "Error: No se pudo cargar la cita", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
             mostrarDialogoReprogramar(citaActual!!)
         }
 
         btnCancelarCita.setOnClickListener {
             if (citaId.isNullOrEmpty()) return@setOnClickListener
 
-            // ✅ Verificar el estado antes de cancelar
             if (citaActual?.estado?.lowercase() == "completada") {
                 Toast.makeText(this, "No se puede cancelar una cita completada", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
@@ -134,20 +125,14 @@ class DetallePacienteActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Cambiar el estado en Firebase
             db.collection("citas").document(citaId)
                 .update("estado", "cancelada")
                 .addOnSuccessListener {
-                    // Actualizar UI inmediatamente
                     tvEstado.text = "Cancelada"
-                    tvEstado.backgroundTintList =
-                        ContextCompat.getColorStateList(this, R.color.estado_cancelada)
-
-                    // Deshabilitar el botón
+                    tvEstado.backgroundTintList = ContextCompat.getColorStateList(this, R.color.estado_cancelada)
                     btnCancelarCita.isEnabled = false
                     btnCancelarCita.alpha = 0.5f
                     btnCancelarCita.text = "No se puede cancelar"
-
                     Toast.makeText(this, "Cita cancelada correctamente", Toast.LENGTH_SHORT).show()
                 }
                 .addOnFailureListener { e ->
@@ -156,12 +141,9 @@ class DetallePacienteActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ FUNCIONALIDAD #7: Modal de confirmación para reprogramar
     private fun mostrarDialogoReprogramar(cita: Cita) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_reprogramar_cita, null)
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
         val etNuevaFecha = dialogView.findViewById<EditText>(R.id.etNuevaFecha)
         val etNuevaHora = dialogView.findViewById<EditText>(R.id.etNuevaHora)
@@ -171,7 +153,6 @@ class DetallePacienteActivity : AppCompatActivity() {
         var nuevaFecha: Calendar? = null
         var nuevaHora: Calendar? = null
 
-        // DatePicker para nueva fecha
         etNuevaFecha.setOnClickListener {
             val now = Calendar.getInstance()
             DatePickerDialog(this, { _, year, month, dayOfMonth ->
@@ -182,7 +163,6 @@ class DetallePacienteActivity : AppCompatActivity() {
             }, now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH)).show()
         }
 
-        // TimePicker para nueva hora
         etNuevaHora.setOnClickListener {
             val now = Calendar.getInstance()
             TimePickerDialog(this, { _, hourOfDay, minute ->
@@ -204,7 +184,6 @@ class DetallePacienteActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Mostrar confirmación final
             val fechaFormateada = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(nuevaFecha!!.time)
             val horaFormateada = SimpleDateFormat("HH:mm", Locale.getDefault()).format(nuevaHora!!.time)
 
@@ -213,8 +192,7 @@ class DetallePacienteActivity : AppCompatActivity() {
                 .setMessage(
                     "¿Estás seguro de reprogramar esta cita?\n\n" +
                             "Nueva fecha: $fechaFormateada\n" +
-                            "Nueva hora: $horaFormateada\n\n" +
-                            "La cita anterior será cancelada automáticamente."
+                            "Nueva hora: $horaFormateada"
                 )
                 .setPositiveButton("Sí, reprogramar") { _, _ ->
                     reprogramarCita(cita, nuevaHora!!)
@@ -231,7 +209,7 @@ class DetallePacienteActivity : AppCompatActivity() {
         db.collection("citas").document(citaVieja.id)
             .update(
                 mapOf(
-                    "fechaHora" to Timestamp(nuevaFechaHora.time),
+                    "fechaHora" to com.google.firebase.Timestamp(nuevaFechaHora.time),
                     "estado" to "pendiente"
                 )
             )

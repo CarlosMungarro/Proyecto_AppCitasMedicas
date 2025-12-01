@@ -209,7 +209,6 @@
             android:text="Ver receta"
             android:textColor="@android:color/white" />
 
-        <!-- ✅ NUEVO: Botón Reprogramar -->
         <Button
             android:id="@+id/btnReprogramar"
             android:layout_width="wrap_content"
