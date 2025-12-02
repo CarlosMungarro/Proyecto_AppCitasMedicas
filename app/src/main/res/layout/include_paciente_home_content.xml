@@ -28,7 +28,7 @@
             android:id="@+id/textHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/mis_citas"
+            android:text="@string/agendas"
             android:textSize="30sp"
             android:textStyle="bold"
             android:textColor="@color/azulLetrasHeader" />

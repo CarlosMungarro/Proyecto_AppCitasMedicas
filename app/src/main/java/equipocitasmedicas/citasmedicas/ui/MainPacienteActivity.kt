@@ -21,8 +21,12 @@ class MainPacienteActivity : AppCompatActivity() {
         val bottom = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         bottom.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> {
+                R.id.nav_agendas -> {
                     supportFragmentManager.commit { replace(R.id.fragmentContainer, PacienteHomeFragment()) }
+                    true
+                }
+                R.id.nav_historial -> {
+                    supportFragmentManager.commit { replace(R.id.fragmentContainer, HistorialFragment()) }
                     true
                 }
                 R.id.nav_perfil -> {

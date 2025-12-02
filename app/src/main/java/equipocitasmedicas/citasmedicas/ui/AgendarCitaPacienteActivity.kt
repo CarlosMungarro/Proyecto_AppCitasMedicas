@@ -1,11 +1,12 @@
 package equipocitasmedicas.citasmedicas.ui
 
 import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +29,8 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
     private var selectedDoctor: MedicoPaciente? = null
     private var selectedDate: Calendar? = null
     private var selectedTime: Calendar? = null
+    private var horasDisponibles = mutableListOf<String>()
+    private var duracionCita = 30 // minutos por defecto
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +48,11 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
 
             //Mostrar disponibilidad
             mostrarDisponibilidad(doctor.id)
+            
+            // Si ya hay una fecha seleccionada, cargar horas disponibles
+            selectedDate?.let {
+                cargarHorasDisponibles(doctor.id, it)
+            }
 
             //Ocultar el campo de búsqueda (opcional)
             binding.etBuscarMedico.visibility = View.GONE
@@ -56,25 +64,72 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
         loadDoctors()
         setupSearch()
         setupDatePicker()
-        setupTimePicker()
+        setupHoraSpinner()
         setupButtons()
     }
 
     private fun loadDoctors() {
         db.collection("medicos").get()
             .addOnSuccessListener { snapshot ->
-                doctorsList.clear()
-                for (doc in snapshot.documents) {
+                if (snapshot.documents.isEmpty()) {
+                    doctorsList.clear()
+                    filteredDoctors.clear()
+                    adapter.notifyDataSetChanged()
+                    return@addOnSuccessListener
+                }
+                
+                val medicosConDisponibilidad = mutableListOf<MedicoPaciente>()
+                var verificacionesCompletadas = 0
+                val totalMedicos = snapshot.documents.size
+                
+                snapshot.documents.forEach { doc ->
                     val id = doc.id
                     val nombre = doc.getString("nombreCompleto") ?: ""
                     val especialidad = doc.getString("especialidad") ?: ""
                     val consultorio = doc.getString("direccionConsultorio") ?: ""
                     val foto = doc.getString("fotoUrl")
-                    doctorsList.add(MedicoPaciente(id, nombre, especialidad, consultorio, foto))
+                    val medico = MedicoPaciente(id, nombre, especialidad, consultorio, foto)
+                    
+                    // Verificar si tiene disponibilidad activa
+                    db.collection("medicos").document(id)
+                        .collection("disponibilidad")
+                        .get()
+                        .addOnSuccessListener { disponibilidadSnapshot ->
+                            var tieneDisponibilidad = false
+                            disponibilidadSnapshot.documents.forEach { dispDoc ->
+                                if (dispDoc.id != "precio" && dispDoc.id != "duracion") {
+                                    val activo = dispDoc.getBoolean("activo") ?: false
+                                    if (activo) {
+                                        tieneDisponibilidad = true
+                                    }
+                                }
+                            }
+                            
+                            if (tieneDisponibilidad) {
+                                medicosConDisponibilidad.add(medico)
+                            }
+                            
+                            verificacionesCompletadas++
+                            // Cuando todas las verificaciones terminen, actualizar la lista
+                            if (verificacionesCompletadas == totalMedicos) {
+                                doctorsList.clear()
+                                doctorsList.addAll(medicosConDisponibilidad)
+                                filteredDoctors.clear()
+                                filteredDoctors.addAll(doctorsList)
+                                adapter.notifyDataSetChanged()
+                            }
+                        }
+                        .addOnFailureListener {
+                            verificacionesCompletadas++
+                            if (verificacionesCompletadas == totalMedicos) {
+                                doctorsList.clear()
+                                doctorsList.addAll(medicosConDisponibilidad)
+                                filteredDoctors.clear()
+                                filteredDoctors.addAll(doctorsList)
+                                adapter.notifyDataSetChanged()
+                            }
+                        }
                 }
-                filteredDoctors.clear()
-                filteredDoctors.addAll(doctorsList)
-                adapter.notifyDataSetChanged()
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Error al cargar médicos", Toast.LENGTH_SHORT).show()
@@ -105,20 +160,129 @@ class AgendarCitaPacienteActivity : AppCompatActivity() {
                 cal.set(year, month, dayOfMonth)
                 selectedDate = cal
                 binding.etFecha.setText("${dayOfMonth}/${month + 1}/$year")
+                
+                // Cargar horas disponibles cuando se selecciona una fecha
+                selectedDoctor?.let { doctor ->
+                    cargarHorasDisponibles(doctor.id, cal)
+                }
             }, now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH)).show()
         }
     }
 
-    private fun setupTimePicker() {
-        binding.etHora.setOnClickListener {
-            val now = Calendar.getInstance()
-            TimePickerDialog(this, { _, hourOfDay, minute ->
-                val cal = selectedDate ?: Calendar.getInstance()
-                cal.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                cal.set(Calendar.MINUTE, minute)
-                selectedTime = cal
-                binding.etHora.setText(String.format("%02d:%02d", hourOfDay, minute))
-            }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), true).show()
+    private fun setupHoraSpinner() {
+        // El spinner se llenará cuando se seleccione un médico y una fecha
+    }
+
+    private fun cargarHorasDisponibles(doctorId: String, fecha: Calendar) {
+        if (selectedDoctor == null || selectedDate == null) return
+
+        val diaSemana = SimpleDateFormat("EEEE", Locale("es", "ES")).format(fecha.time).lowercase()
+        
+        // Obtener disponibilidad del médico
+        db.collection("medicos").document(doctorId)
+            .collection("disponibilidad").document(diaSemana)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (!doc.exists() || doc.getBoolean("activo") != true) {
+                    horasDisponibles.clear()
+                    actualizarSpinnerHora()
+                    return@addOnSuccessListener
+                }
+
+                // Obtener duración de la cita
+                db.collection("medicos").document(doctorId)
+                    .collection("disponibilidad").document("duracion")
+                    .get()
+                    .addOnSuccessListener { docDuracion ->
+                        if (docDuracion.exists()) {
+                            duracionCita = (docDuracion.getLong("minutos") ?: 30).toInt()
+                        }
+
+                        val rangos = (doc.get("rangos") as? List<Map<String, String>>)?.map {
+                            it["inicio"] to it["fin"]
+                        } ?: emptyList()
+
+                        // Obtener citas existentes del médico en esa fecha
+                        val inicioDia = Calendar.getInstance().apply {
+                            time = fecha.time
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        val finDia = Calendar.getInstance().apply {
+                            time = fecha.time
+                            set(Calendar.HOUR_OF_DAY, 23)
+                            set(Calendar.MINUTE, 59)
+                            set(Calendar.SECOND, 59)
+                            set(Calendar.MILLISECOND, 999)
+                        }
+
+                        db.collection("citas")
+                            .whereEqualTo("medicoId", doctorId)
+                            .whereGreaterThanOrEqualTo("fechaHora", Timestamp(inicioDia.time))
+                            .whereLessThanOrEqualTo("fechaHora", Timestamp(finDia.time))
+                            .get()
+                            .addOnSuccessListener { citasSnapshot ->
+                                val horasOcupadas = mutableSetOf<Int>()
+                                citasSnapshot.documents.forEach { citaDoc ->
+                                    val fechaHora = citaDoc.getTimestamp("fechaHora")?.toDate()
+                                    fechaHora?.let {
+                                        val cal = Calendar.getInstance()
+                                        cal.time = it
+                                        val horaMinutos = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+                                        horasOcupadas.add(horaMinutos)
+                                    }
+                                }
+
+                                // Generar horas disponibles
+                                horasDisponibles.clear()
+                                rangos.forEach { rango ->
+                                    val inicioMinutos = parseHoraToMinutes(rango.first)
+                                    val finMinutos = parseHoraToMinutes(rango.second)
+                                    
+                                    var horaActual = inicioMinutos
+                                    while (horaActual + duracionCita <= finMinutos) {
+                                        if (!horasOcupadas.contains(horaActual)) {
+                                            val horas = horaActual / 60
+                                            val minutos = horaActual % 60
+                                            horasDisponibles.add(String.format("%02d:%02d", horas, minutos))
+                                        }
+                                        horaActual += duracionCita
+                                    }
+                                }
+
+                                horasDisponibles.sort()
+                                actualizarSpinnerHora()
+                            }
+                    }
+            }
+    }
+
+    private fun actualizarSpinnerHora() {
+        val spinner = binding.spinnerHora
+        if (horasDisponibles.isEmpty()) {
+            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, listOf("Sin horas disponibles"))
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinner.adapter = adapter
+            spinner.isEnabled = false
+        } else {
+            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, horasDisponibles)
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinner.adapter = adapter
+            spinner.isEnabled = true
+            
+            spinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    val horaSeleccionada = horasDisponibles[position]
+                    val (horas, minutos) = horaSeleccionada.split(":").map { it.toInt() }
+                    val cal = selectedDate ?: Calendar.getInstance()
+                    cal.set(Calendar.HOUR_OF_DAY, horas)
+                    cal.set(Calendar.MINUTE, minutos)
+                    selectedTime = cal
+                }
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+            }
         }
     }
 

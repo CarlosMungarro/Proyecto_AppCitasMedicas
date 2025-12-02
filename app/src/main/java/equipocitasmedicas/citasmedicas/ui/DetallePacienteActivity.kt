@@ -5,8 +5,10 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import equipocitasmedicas.citasmedicas.R
 import equipocitasmedicas.citasmedicas.model.Cita
@@ -71,6 +73,11 @@ class DetallePacienteActivity : AppCompatActivity() {
                         tvEstado.text = textoEstado
                         tvEstado.backgroundTintList =
                             ContextCompat.getColorStateList(this, colorEstado)
+
+                        // 🔹 Mostrar modal de reprogramación si hay cambio pendiente
+                        if (it.reprogramacionPendiente && it.nuevaFechaHora != null) {
+                            mostrarModalReprogramacion(citaId, it.nuevaFechaHora)
+                        }
                     }
                 } else {
                     tvDoctor.text = "Error: cita no encontrada"
@@ -89,22 +96,78 @@ class DetallePacienteActivity : AppCompatActivity() {
         btnCancelarCita.setOnClickListener {
             if (citaId.isNullOrEmpty()) return@setOnClickListener
 
-            // Cambiar el estado en Firebase
+            // Verificar si la cita está finalizada
             db.collection("citas").document(citaId)
-                .update("estado", "cancelada")
-                .addOnSuccessListener {
-                    // Actualizar UI inmediatamente
-                    tvEstado.text = "Cancelada"
-                    tvEstado.backgroundTintList =
-                        ContextCompat.getColorStateList(this, R.color.estado_cancelada)
+                .get()
+                .addOnSuccessListener { doc ->
+                    val estado = doc.getString("estado") ?: ""
+                    if (estado.lowercase() == "completada") {
+                        Toast.makeText(this, "No se puede cancelar una cita finalizada", Toast.LENGTH_SHORT).show()
+                        return@addOnSuccessListener
+                    }
 
-                    Toast.makeText(this, "Cita cancelada correctamente", Toast.LENGTH_SHORT).show()
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(this, "Error al cancelar la cita: ${e.message}", Toast.LENGTH_SHORT).show()
+                    // Cambiar el estado en Firebase
+                    db.collection("citas").document(citaId)
+                        .update("estado", "cancelada")
+                        .addOnSuccessListener {
+                            // Actualizar UI inmediatamente
+                            tvEstado.text = "Cancelada"
+                            tvEstado.backgroundTintList =
+                                ContextCompat.getColorStateList(this, R.color.estado_cancelada)
+
+                            Toast.makeText(this, "Cita cancelada correctamente", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Error al cancelar la cita: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
                 }
         }
 
+    }
+
+    private fun mostrarModalReprogramacion(citaId: String, nuevaFechaHora: Timestamp) {
+        val formato = SimpleDateFormat("dd 'de' MMMM, yyyy 'a las' HH:mm", Locale("es", "MX"))
+        val nuevaFechaTexto = formato.format(nuevaFechaHora.toDate())
+
+        AlertDialog.Builder(this)
+            .setTitle("Reprogramación de cita")
+            .setMessage("El médico ha reprogramado tu cita para el $nuevaFechaTexto.\n\n¿Deseas aceptar este cambio?")
+            .setPositiveButton("Aceptar") { _, _ ->
+                // Aceptar reprogramación: actualizar fechaHora y limpiar campos de reprogramación
+                db.collection("citas").document(citaId)
+                    .update(
+                        "fechaHora", nuevaFechaHora,
+                        "nuevaFechaHora", null,
+                        "reprogramacionPendiente", false
+                    )
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Cita reprogramada correctamente", Toast.LENGTH_SHORT).show()
+                        // Recargar la actividad para mostrar la nueva fecha
+                        finish()
+                        startActivity(intent)
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Error al aceptar reprogramación: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .setNegativeButton("Rechazar") { _, _ ->
+                // Rechazar reprogramación: cancelar la cita
+                db.collection("citas").document(citaId)
+                    .update(
+                        "estado", "cancelada",
+                        "nuevaFechaHora", null,
+                        "reprogramacionPendiente", false
+                    )
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Cita cancelada debido al rechazo de reprogramación", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Error al rechazar reprogramación: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .setCancelable(false)
+            .show()
     }
 }
 

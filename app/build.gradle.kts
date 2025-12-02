@@ -52,6 +52,7 @@ dependencies {
     // Glide
     implementation("com.github.bumptech.glide:glide:4.15.1")
     implementation(libs.androidx.navigation.fragment)
+    implementation(libs.firebase.database)
     kapt("com.github.bumptech.glide:compiler:4.15.1")
 
     // --- Firebase BOM (gestiona versiones) ---

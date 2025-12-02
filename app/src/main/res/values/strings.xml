@@ -3,6 +3,8 @@
     <string name="configuracion_de_perfil">Configuración de perfil</string>
     <string name="logo_medicare_connect">Logo Medicare Connect</string>
     <string name="mis_citas">Mis citas</string>
+    <string name="agendas">Agendas</string>
+    <string name="historial">Historial</string>
     <string name="agendar_cita">Agendar cita</string>
     <string name="mis_citas_medico">Mis Citas (Médico)</string>
 

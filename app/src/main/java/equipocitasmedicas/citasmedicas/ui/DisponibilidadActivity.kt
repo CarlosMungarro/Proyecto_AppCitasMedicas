@@ -29,6 +29,7 @@ class DisponibilidadActivity : AppCompatActivity() {
     private lateinit var horariosJueves: LinearLayout
     private lateinit var horariosViernes: LinearLayout
 
+    private lateinit var etDuracion: EditText
     private lateinit var etPrecio: EditText
     private lateinit var btnBack: ImageView
     private lateinit var btnGuardarCambios: Button
@@ -74,6 +75,7 @@ class DisponibilidadActivity : AppCompatActivity() {
         horariosJueves = findViewById(R.id.horariosJueves)
         horariosViernes = findViewById(R.id.horariosViernes)
 
+        etDuracion = findViewById(R.id.etDuracion)
         etPrecio = findViewById(R.id.etPrecio)
         btnBack = findViewById(R.id.btnAtras)
         btnGuardarCambios = findViewById(R.id.btnGuardarCambios)
@@ -233,8 +235,16 @@ class DisponibilidadActivity : AppCompatActivity() {
     // ----------- Guardar / Cargar Firestore ------------
 
     private fun guardarCambios() {
+        val duracion = etDuracion.text.toString().trim()
         val precio = etPrecio.text.toString().trim()
+        if (duracion.isEmpty()) { toast("Por favor ingresa la duración de la cita"); return }
         if (precio.isEmpty()) { toast("Por favor ingresa el precio por consulta"); return }
+
+        val duracionInt = duracion.toIntOrNull()
+        if (duracionInt == null || duracionInt <= 0) {
+            toast("La duración debe ser un número positivo")
+            return
+        }
 
         // Validaciones por día
         for (d in days) {
@@ -254,9 +264,10 @@ class DisponibilidadActivity : AppCompatActivity() {
             )
             col.document(d.name).set(payload)
         }
-        // Guardar precio
+        // Guardar duración y precio
+        col.document("duracion").set(mapOf("minutos" to duracionInt))
         col.document("precio").set(mapOf("valor" to precio))
-            .addOnSuccessListener { toast("Disponibilidad y precio guardados") }
+            .addOnSuccessListener { toast("Disponibilidad, duración y precio guardados") }
             .addOnFailureListener { e -> toast("Error al guardar: ${e.message}") }
     }
 
@@ -309,6 +320,11 @@ class DisponibilidadActivity : AppCompatActivity() {
             qs.documents.forEach { doc ->
                 if (doc.id == "precio") {
                     etPrecio.setText(doc.getString("valor") ?: "")
+                    return@forEach
+                }
+                if (doc.id == "duracion") {
+                    val minutos = doc.getLong("minutos")?.toInt() ?: 30
+                    etDuracion.setText(minutos.toString())
                     return@forEach
                 }
                 val day = days.firstOrNull { it.name == doc.id } ?: return@forEach

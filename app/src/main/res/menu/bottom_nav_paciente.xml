@@ -2,9 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/nav_home"
-        android:title="@string/mis_citas"
+        android:id="@+id/nav_agendas"
+        android:title="@string/agendas"
         android:icon="@drawable/home"/>
+
+    <item
+        android:id="@+id/nav_historial"
+        android:title="@string/historial"
+        android:icon="@drawable/reloj"/>
 
     <item
         android:id="@+id/nav_perfil"

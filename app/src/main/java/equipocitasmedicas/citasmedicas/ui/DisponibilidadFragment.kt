@@ -25,6 +25,7 @@ class DisponibilidadFragment : Fragment() {
     private lateinit var horariosJueves: LinearLayout
     private lateinit var horariosViernes: LinearLayout
 
+    private lateinit var etDuracion: EditText
     private lateinit var etPrecio: EditText
     private lateinit var btnGuardarCambios: Button
 
@@ -55,6 +56,7 @@ class DisponibilidadFragment : Fragment() {
         horariosJueves = view.findViewById(R.id.horariosJueves)
         horariosViernes = view.findViewById(R.id.horariosViernes)
 
+        etDuracion = view.findViewById(R.id.etDuracion)
         etPrecio = view.findViewById(R.id.etPrecio)
         btnGuardarCambios = view.findViewById(R.id.btnGuardarCambios)
 
@@ -166,8 +168,16 @@ class DisponibilidadFragment : Fragment() {
     }
 
     private fun guardarCambios() {
+        val duracion = etDuracion.text.toString().trim()
         val precio = etPrecio.text.toString().trim()
+        if (duracion.isEmpty()) { toast("Por favor ingresa la duración de la cita"); return }
         if (precio.isEmpty()) { toast("Por favor ingresa el precio por consulta"); return }
+
+        val duracionInt = duracion.toIntOrNull()
+        if (duracionInt == null || duracionInt <= 0) {
+            toast("La duración debe ser un número positivo")
+            return
+        }
 
         for (d in days) {
             if (!d.switch.isChecked) continue
@@ -185,8 +195,9 @@ class DisponibilidadFragment : Fragment() {
             )
             col.document(d.name).set(payload)
         }
+        col.document("duracion").set(mapOf("minutos" to duracionInt))
         col.document("precio").set(mapOf("valor" to precio))
-            .addOnSuccessListener { toast("Disponibilidad y precio guardados") }
+            .addOnSuccessListener { toast("Disponibilidad, duración y precio guardados") }
             .addOnFailureListener { e -> toast("Error al guardar: ${e.message}") }
     }
 
@@ -226,6 +237,11 @@ class DisponibilidadFragment : Fragment() {
             days.forEach { d -> d.container.removeAllViews(); ensurePlusButton(d.container) }
             qs.documents.forEach { doc ->
                 if (doc.id == "precio") { etPrecio.setText(doc.getString("valor") ?: ""); return@forEach }
+                if (doc.id == "duracion") {
+                    val minutos = doc.getLong("minutos")?.toInt() ?: 30
+                    etDuracion.setText(minutos.toString())
+                    return@forEach
+                }
                 val day = days.firstOrNull { it.name == doc.id } ?: return@forEach
                 val activo = doc.getBoolean("activo") ?: false
                 day.switch.isChecked = activo
